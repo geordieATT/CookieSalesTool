@@ -8,7 +8,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   background: #f5f5f7;
   color: #1d1d1f;
@@ -32,14 +32,9 @@ body {
   top: 0;
   z-index: 10;
 }
-.topbar h1 {
-  font-size: 17px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  color: #1d1d1f;
-  margin-right: 4px;
-  white-space: nowrap;
-}
+.topbar h1 { font-size: 17px; font-weight: 600; letter-spacing: -0.02em; color: #1d1d1f; margin-right: 4px; white-space: nowrap; }
+.topbar-spacer { flex: 1; }
+
 .expo-select {
   border: 1px solid rgba(0,0,0,0.15);
   border-radius: 8px;
@@ -72,10 +67,12 @@ body {
 }
 .btn:hover { background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
 .btn:active { transform: scale(0.98); }
-.btn.primary { background: #0071e3; color: #fff; border-color: transparent; font-weight: 500; }
+.btn.primary { background: #0071e3; color: #fff; border-color: transparent; }
 .btn.primary:hover { background: #0077ed; box-shadow: 0 2px 8px rgba(0,113,227,0.35); }
 .btn.danger { border-color: transparent; color: #ff3b30; background: rgba(255,59,48,0.08); }
 .btn.danger:hover { background: rgba(255,59,48,0.14); }
+.btn.export-btn { background: rgba(52,199,89,0.1); color: #1a7f37; border-color: rgba(52,199,89,0.3); }
+.btn.export-btn:hover { background: rgba(52,199,89,0.18); }
 
 /* ── Add expo panel ── */
 .add-expo-panel {
@@ -97,11 +94,10 @@ body {
   font-family: inherit;
   color: #1d1d1f;
   background: #f5f5f7;
-  transition: border-color .15s, box-shadow .15s, background .15s;
+  transition: border-color .15s, box-shadow .15s;
 }
 .panel-input:focus { outline: none; border-color: #0071e3; box-shadow: 0 0 0 3px rgba(0,113,227,0.2); background: #fff; }
 .panel-input::placeholder { color: #aeaeb2; }
-.panel-input[type="date"] { min-width: 150px; }
 .panel-input.name-input { min-width: 210px; }
 .panel-input.loc-input  { min-width: 190px; }
 
@@ -129,9 +125,23 @@ body {
 
 /* ── Main ── */
 .main { padding: 28px; }
-.expo-header { margin-bottom: 18px; display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.expo-header { margin-bottom: 14px; display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
 .expo-title { font-size: 22px; font-weight: 700; letter-spacing: -0.03em; color: #1d1d1f; }
-.expo-meta { font-size: 13px; color: #6e6e73; font-weight: 400; }
+.expo-meta { font-size: 13px; color: #6e6e73; }
+
+/* ── Stats bar ── */
+.stats-bar { display: flex; gap: 14px; margin-bottom: 18px; flex-wrap: wrap; }
+.stat-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px 20px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.05);
+  min-width: 150px;
+}
+.stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: #6e6e73; margin-bottom: 4px; }
+.stat-value { font-size: 22px; font-weight: 700; letter-spacing: -0.03em; }
+.stat-value.won-color { color: #1a7f37; }
+.stat-value.closing-color { color: #b45309; }
 
 /* ── Card & table ── */
 .table-card {
@@ -156,13 +166,18 @@ thead th {
   white-space: nowrap;
   background: #fafafa;
 }
-thead th.th-expand { width: 36px; padding: 11px 6px; }
-thead th.th-actions { width: 44px; padding: 11px 6px; }
+thead th.th-icon { width: 36px; padding: 11px 6px; text-align: center; }
+thead th.sortable { cursor: pointer; user-select: none; transition: color .15s; }
+thead th.sortable:hover { color: #1d1d1f; }
+thead th.sort-active { color: #0071e3; }
+.sort-arrow { margin-left: 3px; font-size: 10px; opacity: 0.7; }
 
 tbody tr { border-bottom: 1px solid rgba(0,0,0,0.055); transition: background .1s; }
 tbody tr:last-child { border-bottom: none; }
 tbody tr.data-row:hover { background: #f5f5f7; }
 tbody tr.data-row.editing { background: #fff8e1; }
+tbody tr.data-row.starred-row { background: rgba(255,204,0,0.04); }
+tbody tr.data-row.starred-row:hover { background: rgba(255,204,0,0.09); }
 
 td { padding: 0; vertical-align: middle; }
 
@@ -210,6 +225,47 @@ td select.cell-edit {
   cursor: pointer;
 }
 
+/* ── Quick-pick preset buttons ── */
+.quick-picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 6px 12px 4px;
+}
+.quick-pick-btn {
+  background: rgba(0,113,227,0.08);
+  border: 1px solid rgba(0,113,227,0.2);
+  border-radius: 14px;
+  color: #0071e3;
+  font-size: 11px;
+  font-family: inherit;
+  font-weight: 500;
+  padding: 3px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .1s;
+}
+.quick-pick-btn:hover { background: rgba(0,113,227,0.16); }
+
+/* ── Star button ── */
+.star-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform .15s, background .15s;
+  color: #c7c7cc;
+}
+.star-btn:hover { transform: scale(1.25); background: rgba(255,204,0,0.15); }
+.star-btn.starred { color: #f5a623; }
+
 /* ── Expand button ── */
 .expand-btn {
   background: none;
@@ -222,7 +278,7 @@ td select.cell-edit {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: color .15s, background .15s, transform .2s;
+  transition: color .15s, background .15s;
   flex-shrink: 0;
 }
 .expand-btn svg { width: 10px; height: 10px; transition: transform .2s; }
@@ -274,23 +330,81 @@ td select.cell-edit {
 
 /* ── Status pills ── */
 .pill { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; letter-spacing: 0.01em; }
-.pill-New       { background: rgba(110,110,115,0.12); color: #3a3a3c; }
-.pill-Contacted { background: rgba(0,113,227,0.12);   color: #0071e3; }
-.pill-Mockup    { background: rgba(94,92,230,0.12);   color: #5856d6; }
-.pill-Quoted    { background: rgba(255,159,10,0.14);  color: #b45309; }
-.pill-Won       { background: rgba(52,199,89,0.14);   color: #1a7f37; }
-.pill-Lost      { background: rgba(255,59,48,0.12);   color: #d70015; }
+.pill-New            { background: rgba(110,110,115,0.12); color: #3a3a3c; }
+.pill-InContact      { background: rgba(0,113,227,0.12);   color: #0071e3; }
+.pill-WaitingReply   { background: rgba(94,92,230,0.12);   color: #5856d6; }
+.pill-OrderedUnpaid  { background: rgba(255,159,10,0.14);  color: #b45309; }
+.pill-OrderedPaid    { background: rgba(52,199,89,0.14);   color: #1a7f37; }
+.pill-Ghosted        { background: rgba(255,59,48,0.12);   color: #d70015; }
 
-/* ── Interaction log row ── */
+/* ── Expanded panel ── */
 .log-row { display: none; }
 .log-row.open { display: table-row; }
 .log-row > td {
   background: #f9f9fb;
   border-bottom: 1px solid rgba(0,0,0,0.07);
-  padding: 14px 16px 14px 52px;
+  padding: 0;
 }
 
-.log-timeline { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+.log-panel-inner {
+  padding: 16px 16px 18px 52px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+@media (max-width: 680px) { .log-panel-inner { grid-template-columns: 1fr; } }
+
+.panel-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: #6e6e73;
+  margin-bottom: 10px;
+}
+
+/* ── Fulfillment ── */
+.fulfillment-section { display: flex; flex-direction: column; gap: 10px; }
+.fulfillment-radios { display: flex; gap: 16px; align-items: center; }
+.fulfillment-radios label { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; cursor: pointer; }
+.fulfillment-radios input[type="radio"] { accent-color: #0071e3; cursor: pointer; width: 15px; height: 15px; }
+.fulfillment-addr-section { display: none; }
+.fulfillment-addr-input,
+.fulfillment-date-input,
+.fulfillment-time-input {
+  border: 1px solid rgba(0,0,0,0.15);
+  border-radius: 7px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #1d1d1f;
+  background: #fff;
+  transition: border-color .15s, box-shadow .15s;
+}
+.fulfillment-addr-input { width: 100%; }
+.fulfillment-addr-input:focus,
+.fulfillment-date-input:focus,
+.fulfillment-time-input:focus { outline: none; border-color: #0071e3; box-shadow: 0 0 0 2px rgba(0,113,227,0.2); }
+.fulfillment-addr-input::placeholder { color: #aeaeb2; }
+.fulfillment-datetime { display: flex; gap: 8px; flex-wrap: wrap; }
+.fulfillment-save-btn {
+  align-self: flex-start;
+  border: 1px solid rgba(0,0,0,0.15);
+  background: #fff;
+  border-radius: 7px;
+  padding: 5px 14px;
+  font-size: 12px;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  color: #0071e3;
+  transition: background .1s;
+}
+.fulfillment-save-btn:hover { background: #f0f7ff; }
+
+/* ── Interaction log ── */
+.log-section { display: flex; flex-direction: column; gap: 8px; }
+.log-timeline { display: flex; flex-direction: column; gap: 0; margin-bottom: 8px; max-height: 180px; overflow-y: auto; }
 .log-entry {
   display: flex;
   gap: 12px;
@@ -301,9 +415,9 @@ td select.cell-edit {
 .log-entry:last-child { border-bottom: none; }
 .log-entry-date { color: #6e6e73; white-space: nowrap; min-width: 82px; }
 .log-entry-note { color: #1d1d1f; }
-.log-empty { font-size: 12px; color: #aeaeb2; margin-bottom: 12px; }
+.log-empty { font-size: 12px; color: #aeaeb2; margin-bottom: 8px; }
 
-.log-add { display: flex; gap: 8px; align-items: center; }
+.log-add { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .log-add input[type="date"],
 .log-add input[type="text"] {
   border: 1px solid rgba(0,0,0,0.15);
@@ -346,6 +460,8 @@ td select.cell-edit {
     <option value="">— Select an expo —</option>
   </select>
   <button class="btn primary" id="btn-add-expo">+ Add expo</button>
+  <div class="topbar-spacer"></div>
+  <button class="btn export-btn" id="btn-export-pdf">Export PDF</button>
 </div>
 
 <div class="add-expo-panel" id="add-expo-panel">
@@ -363,28 +479,41 @@ td select.cell-edit {
       <div class="expo-title" id="expo-title"></div>
       <div class="expo-meta" id="expo-meta"></div>
     </div>
+
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-label">Total Won</div>
+        <div class="stat-value won-color" id="stat-won">$0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Closing</div>
+        <div class="stat-value closing-color" id="stat-closing">$0</div>
+      </div>
+    </div>
+
     <div class="table-card"><div class="table-wrap">
       <table id="leads-table">
         <thead>
           <tr>
-            <th class="th-expand"></th>
-            <th>Company</th>
-            <th>Contact name</th>
-            <th>Email</th>
+            <th class="th-icon sortable" data-sort="starred" title="Sort by starred">★<span class="sort-arrow"></span></th>
+            <th class="th-icon"></th>
+            <th class="sortable" data-sort="company">Company<span class="sort-arrow"></span></th>
+            <th class="sortable" data-sort="contact_name">Contact<span class="sort-arrow"></span></th>
+            <th class="sortable" data-sort="source">Source<span class="sort-arrow"></span></th>
             <th>Phone</th>
-            <th>Status</th>
-            <th>Qty</th>
-            <th>Est. value</th>
+            <th class="sortable" data-sort="status">Status<span class="sort-arrow"></span></th>
+            <th class="sortable" data-sort="est_quantity">Qty<span class="sort-arrow"></span></th>
+            <th class="sortable" data-sort="est_value">Est. value<span class="sort-arrow"></span></th>
             <th>Next action</th>
-            <th>Due date</th>
-            <th style="min-width:160px">Notes</th>
-            <th class="th-actions"></th>
+            <th class="sortable" data-sort="next_action_due">Due date<span class="sort-arrow"></span></th>
+            <th style="min-width:140px">Notes</th>
+            <th class="th-icon"></th>
           </tr>
         </thead>
         <tbody id="leads-body"></tbody>
         <tfoot>
           <tr class="add-row">
-            <td colspan="12">
+            <td colspan="13">
               <button class="add-row-btn" id="btn-add-attendee">Add attendee</button>
             </td>
           </tr>
@@ -396,6 +525,8 @@ td select.cell-edit {
 
 <div class="toast" id="toast">Saved</div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
@@ -403,19 +534,24 @@ const SUPABASE_URL = 'https://fbtqvkxnpzaocuzrrfrb.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_TXnkHlpcOU7HrCrkqNPhAg_BwpWzLN9';
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const STATUSES = ['New', 'Contacted', 'Mockup sent', 'Quoted', 'Won', 'Lost'];
+const STATUSES = ['New', 'In Contact', 'Waiting Reply', 'Ordered and Unpaid', 'Ordered and Paid', 'Ghosted'];
 const PILL_CLASS = {
-  'New': 'pill-New', 'Contacted': 'pill-Contacted', 'Mockup sent': 'pill-Mockup',
-  'Quoted': 'pill-Quoted', 'Won': 'pill-Won', 'Lost': 'pill-Lost',
+  'New':                'pill-New',
+  'In Contact':         'pill-InContact',
+  'Waiting Reply':      'pill-WaitingReply',
+  'Ordered and Unpaid': 'pill-OrderedUnpaid',
+  'Ordered and Paid':   'pill-OrderedPaid',
+  'Ghosted':            'pill-Ghosted',
 };
+const SOURCES = ['Instagram', 'Facebook', 'Through mum', 'Email', 'Phone', 'Messenger'];
+const NEXT_ACTION_PRESETS = ['Waiting for payment confirmation', 'Arrange delivery', 'Arrange pickup'];
 
-// ── State ──────────────────────────────────────────────────────────────────
-let expos       = [];
-let currentExpo = null;
-let attendees   = [];
-const interactionCache = {};  // attendee_id -> interactions[]
+// ── State ──────────────────────────────────────────────────────────────────────
+let expos = [], currentExpo = null, attendees = [];
+const interactionCache = {};
+let sortField = null, sortDir = 'asc';
 
-// ── DOM refs ───────────────────────────────────────────────────────────────
+// ── DOM refs ───────────────────────────────────────────────────────────────────
 const expoSelect     = document.getElementById('expo-select');
 const addExpoPanel   = document.getElementById('add-expo-panel');
 const btnAddExpo     = document.getElementById('btn-add-expo');
@@ -431,8 +567,11 @@ const expoMeta       = document.getElementById('expo-meta');
 const leadsBody      = document.getElementById('leads-body');
 const btnAddAttendee = document.getElementById('btn-add-attendee');
 const toast          = document.getElementById('toast');
+const statWon        = document.getElementById('stat-won');
+const statClosing    = document.getElementById('stat-closing');
+const btnExportPdf   = document.getElementById('btn-export-pdf');
 
-// ── Toast ──────────────────────────────────────────────────────────────────
+// ── Toast ──────────────────────────────────────────────────────────────────────
 let toastTimer = null;
 function showToast(msg = 'Saved') {
   toast.textContent = msg;
@@ -441,32 +580,25 @@ function showToast(msg = 'Saved') {
   toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────────────────────
 function esc(s) {
   if (s == null) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
-function today() {
-  return new Date().toISOString().slice(0, 10);
-}
-
+function today() { return new Date().toISOString().slice(0, 10); }
 function fmtDate(d) {
   if (!d) return '';
   const [y, m, day] = d.split('-');
   return new Date(+y, +m - 1, +day).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' });
 }
-
 function fmtCurrency(v) {
   if (v == null || v === '') return '';
   return '$' + Number(v).toLocaleString('en-NZ', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 }
-
 function pillHtml(status) {
   const cls = PILL_CLASS[status] || 'pill-New';
   return `<span class="pill ${cls}">${esc(status || 'New')}</span>`;
 }
-
 function dueDateHtml(d) {
   if (!d) return '';
   const t = today();
@@ -474,7 +606,49 @@ function dueDateHtml(d) {
   return cls ? `<span class="${cls}">${esc(fmtDate(d))}</span>` : esc(fmtDate(d));
 }
 
-// ── Expos ──────────────────────────────────────────────────────────────────
+// ── Stats ──────────────────────────────────────────────────────────────────────
+function updateStats() {
+  const won = attendees
+    .filter(a => a.status === 'Ordered and Paid')
+    .reduce((s, a) => s + (a.est_value || 0), 0);
+  const closing = attendees
+    .filter(a => a.status === 'Ordered and Unpaid')
+    .reduce((s, a) => s + (a.est_value || 0), 0);
+  statWon.textContent     = won     ? fmtCurrency(won)     : '$0';
+  statClosing.textContent = closing ? fmtCurrency(closing) : '$0';
+}
+
+// ── Sort ───────────────────────────────────────────────────────────────────────
+function updateSortHeaders() {
+  document.querySelectorAll('thead th.sortable').forEach(th => {
+    const field = th.dataset.sort;
+    const arrow = th.querySelector('.sort-arrow');
+    th.classList.toggle('sort-active', field === sortField);
+    if (arrow) arrow.textContent = field !== sortField ? ' ↕' : sortDir === 'asc' ? ' ↑' : ' ↓';
+  });
+}
+
+function sortedAttendees() {
+  if (!sortField) return [...attendees];
+  return [...attendees].sort((a, b) => {
+    let av = a[sortField], bv = b[sortField];
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    if (typeof av === 'boolean' || typeof bv === 'boolean') {
+      const an = av ? 1 : 0, bn = bv ? 1 : 0;
+      return sortDir === 'asc' ? an - bn : bn - an;
+    }
+    if (typeof av === 'number' || (typeof av === 'string' && !isNaN(Number(av)) && av !== '')) {
+      const na = Number(av), nb = Number(bv);
+      return sortDir === 'asc' ? na - nb : nb - na;
+    }
+    const cmp = String(av).localeCompare(String(bv));
+    return sortDir === 'asc' ? cmp : -cmp;
+  });
+}
+
+// ── Expos ──────────────────────────────────────────────────────────────────────
 async function loadExpos() {
   const { data, error } = await sb.from('expos').select('*').order('date', { ascending: false });
   if (error) { console.error(error); return; }
@@ -513,14 +687,10 @@ function clearAddExpoForm() { expoNameInput.value = ''; expoDateInput.value = ''
 function showAddExpoPanel() { addExpoPanel.classList.add('open'); expoNameInput.focus(); }
 function hideAddExpoPanel() { addExpoPanel.classList.remove('open'); }
 
-// ── Expo selection ─────────────────────────────────────────────────────────
+// ── Expo selection ─────────────────────────────────────────────────────────────
 async function selectExpo(id) {
   currentExpo = expos.find(e => e.id === id) || null;
-  if (!currentExpo) {
-    noExpo.style.display = '';
-    expoView.style.display = 'none';
-    return;
-  }
+  if (!currentExpo) { noExpo.style.display = ''; expoView.style.display = 'none'; return; }
   noExpo.style.display = 'none';
   expoView.style.display = '';
   expoTitle.textContent = currentExpo.name;
@@ -531,32 +701,36 @@ async function selectExpo(id) {
   await loadAttendees();
 }
 
-// ── Attendees ──────────────────────────────────────────────────────────────
+// ── Attendees ──────────────────────────────────────────────────────────────────
 async function loadAttendees() {
   if (!currentExpo) return;
   const { data, error } = await sb.from('attendees')
     .select('*')
     .eq('expo_id', currentExpo.id)
-    .order('next_action_due', { ascending: true, nullsFirst: false })
     .order('created_at', { ascending: true });
   if (error) { console.error(error); return; }
   attendees = data || [];
   renderTable();
+  updateStats();
 }
 
 function renderTable() {
   leadsBody.innerHTML = '';
-  attendees.forEach(a => {
+  sortedAttendees().forEach(a => {
     leadsBody.insertAdjacentHTML('beforeend', rowHtml(a));
     leadsBody.insertAdjacentHTML('beforeend', logRowHtml(a.id));
   });
   leadsBody.querySelectorAll('tr.data-row').forEach(tr => attachRowEvents(tr));
+  updateSortHeaders();
 }
 
 function rowHtml(a) {
-  return `<tr class="data-row" data-id="${esc(a.id)}">
+  return `<tr class="data-row${a.starred ? ' starred-row' : ''}" data-id="${esc(a.id)}">
     <td style="text-align:center;padding:0 4px">
-      <button class="expand-btn" title="Interaction log">
+      <button class="star-btn${a.starred ? ' starred' : ''}" title="${a.starred ? 'Unstar' : 'Star'}">${a.starred ? '★' : '☆'}</button>
+    </td>
+    <td style="text-align:center;padding:0 4px">
+      <button class="expand-btn" title="Interaction log &amp; fulfillment">
         <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="3,2 7,5 3,8"/>
         </svg>
@@ -564,7 +738,7 @@ function rowHtml(a) {
     </td>
     <td><span class="cell-inner" data-field="company">${esc(a.company)}</span></td>
     <td><span class="cell-inner" data-field="contact_name">${esc(a.contact_name)}</span></td>
-    <td><span class="cell-inner" data-field="email">${esc(a.email)}</span></td>
+    <td><span class="cell-inner" data-field="source">${esc(a.source)}</span></td>
     <td><span class="cell-inner" data-field="phone">${esc(a.phone)}</span></td>
     <td><span class="cell-inner" data-field="status">${pillHtml(a.status || 'New')}</span></td>
     <td><span class="cell-inner" data-field="est_quantity">${esc(a.est_quantity)}</span></td>
@@ -576,16 +750,41 @@ function rowHtml(a) {
   </tr>`;
 }
 
-function logRowHtml(attendeeId) {
-  return `<tr class="log-row" data-for="${esc(attendeeId)}">
-    <td colspan="12"><div class="log-panel" data-id="${esc(attendeeId)}">
-      <div class="log-timeline"></div>
-      <div class="log-add">
-        <input type="date" class="log-date-input" value="${today()}">
-        <input type="text" class="log-note-input" placeholder="Add a note…">
-        <button class="log-save-btn">Save</button>
+function logRowHtml(id) {
+  return `<tr class="log-row" data-for="${esc(id)}">
+    <td colspan="13">
+      <div class="log-panel" data-id="${esc(id)}">
+        <div class="log-panel-inner">
+
+          <div class="fulfillment-section">
+            <div class="panel-section-title">Fulfillment</div>
+            <div class="fulfillment-radios">
+              <label><input type="radio" name="ft-${esc(id)}" class="fulfillment-type" value="pickup"> Pickup</label>
+              <label><input type="radio" name="ft-${esc(id)}" class="fulfillment-type" value="delivery"> Delivery</label>
+            </div>
+            <div class="fulfillment-addr-section">
+              <input type="text" class="fulfillment-addr-input" placeholder="Delivery address…">
+            </div>
+            <div class="fulfillment-datetime">
+              <input type="date" class="fulfillment-date-input" title="Scheduled date">
+              <input type="time" class="fulfillment-time-input" title="Scheduled time">
+            </div>
+            <button class="fulfillment-save-btn">Save fulfillment</button>
+          </div>
+
+          <div class="log-section">
+            <div class="panel-section-title">Interaction Log</div>
+            <div class="log-timeline"></div>
+            <div class="log-add">
+              <input type="date" class="log-date-input" value="${today()}">
+              <input type="text" class="log-note-input" placeholder="Add a note…">
+              <button class="log-save-btn">Save</button>
+            </div>
+          </div>
+
+        </div>
       </div>
-    </div></td>
+    </td>
   </tr>`;
 }
 
@@ -596,12 +795,27 @@ function attachRowEvents(tr) {
   });
   tr.querySelector('.del-btn').addEventListener('click', () => deleteAttendee(tr));
   tr.querySelector('.expand-btn').addEventListener('click', () => toggleLog(tr, id));
+  tr.querySelector('.star-btn').addEventListener('click', () => toggleStar(tr, id));
 }
 
-// ── Inline editing ─────────────────────────────────────────────────────────
+// ── Starring ───────────────────────────────────────────────────────────────────
+async function toggleStar(tr, id) {
+  const att = attendees.find(a => a.id === id);
+  if (!att) return;
+  att.starred = !att.starred;
+  const { error } = await sb.from('attendees').update({ starred: att.starred }).eq('id', id);
+  if (error) { att.starred = !att.starred; return; }
+  const btn = tr.querySelector('.star-btn');
+  btn.textContent = att.starred ? '★' : '☆';
+  btn.title = att.starred ? 'Unstar' : 'Star';
+  btn.classList.toggle('starred', att.starred);
+  tr.classList.toggle('starred-row', att.starred);
+  showToast(att.starred ? 'Starred' : 'Unstarred');
+}
+
+// ── Inline editing ─────────────────────────────────────────────────────────────
 function startEdit(tr, cell) {
   if (cell.querySelector('input, select, textarea')) return;
-
   const field = cell.dataset.field;
   const id    = tr.dataset.id;
   const att   = attendees.find(a => a.id === id);
@@ -619,28 +833,84 @@ function startEdit(tr, cell) {
       if (s === (att.status || 'New')) opt.selected = true;
       control.appendChild(opt);
     });
-  } else if (field === 'notes' || field === 'next_action') {
+    cell.innerHTML = '';
+    cell.appendChild(control);
+    control.focus();
+    control.addEventListener('change', () => control.blur());
+    control.addEventListener('keydown', e => { if (e.key === 'Escape') revertCell(tr, cell, att); });
+
+  } else if (field === 'source') {
+    control = document.createElement('select');
+    control.className = 'cell-edit';
+    const empty = document.createElement('option');
+    empty.value = ''; empty.textContent = '— Select source —';
+    if (!att.source) empty.selected = true;
+    control.appendChild(empty);
+    SOURCES.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s; opt.textContent = s;
+      if (s === att.source) opt.selected = true;
+      control.appendChild(opt);
+    });
+    cell.innerHTML = '';
+    cell.appendChild(control);
+    control.focus();
+    control.addEventListener('change', () => control.blur());
+    control.addEventListener('keydown', e => { if (e.key === 'Escape') revertCell(tr, cell, att); });
+
+  } else if (field === 'next_action') {
+    const wrapper = document.createElement('div');
+    const picks = document.createElement('div');
+    picks.className = 'quick-picks';
+    NEXT_ACTION_PRESETS.forEach(preset => {
+      const btn = document.createElement('button');
+      btn.className = 'quick-pick-btn';
+      btn.type = 'button';
+      btn.textContent = preset;
+      btn.addEventListener('mousedown', e => e.preventDefault());
+      btn.addEventListener('click', () => { control.value = preset; control.focus(); });
+      picks.appendChild(btn);
+    });
     control = document.createElement('textarea');
     control.className = 'cell-edit';
-    control.rows = field === 'notes' ? 2 : 1;
+    control.rows = 2;
     control.value = att[field] || '';
+    wrapper.appendChild(picks);
+    wrapper.appendChild(control);
+    cell.innerHTML = '';
+    cell.appendChild(wrapper);
+    control.focus();
+
+  } else if (field === 'notes') {
+    control = document.createElement('textarea');
+    control.className = 'cell-edit';
+    control.rows = 2;
+    control.value = att[field] || '';
+    cell.innerHTML = '';
+    cell.appendChild(control);
+    control.focus();
+
   } else if (field === 'next_action_due') {
     control = document.createElement('input');
     control.className = 'cell-edit';
     control.type = 'date';
     control.value = att[field] || '';
+    cell.innerHTML = '';
+    cell.appendChild(control);
+    control.focus();
+    control.addEventListener('change', () => control.blur());
+
   } else {
     control = document.createElement('input');
     control.className = 'cell-edit';
-    control.type = field === 'est_quantity' || field === 'est_value' ? 'number' : 'text';
+    control.type = (field === 'est_quantity' || field === 'est_value') ? 'number' : 'text';
     if (field === 'est_value') control.step = '0.01';
     control.value = att[field] != null ? att[field] : '';
+    cell.innerHTML = '';
+    cell.appendChild(control);
+    control.focus();
+    if (control.select) control.select();
   }
-
-  cell.innerHTML = '';
-  cell.appendChild(control);
-  control.focus();
-  if (control.select) control.select();
 
   const commit = async () => {
     const newVal = control.value;
@@ -649,24 +919,22 @@ function startEdit(tr, cell) {
     if (field === 'est_value')    parsed = newVal === '' ? null : parseFloat(newVal);
 
     if (parsed === att[field] || (parsed == null && att[field] == null)) {
-      revertCell(tr, cell, att);
-      return;
+      revertCell(tr, cell, att); return;
     }
-
     att[field] = parsed;
     const { error } = await sb.from('attendees').update({ [field]: parsed }).eq('id', id);
-    if (error) { console.error(error); }
-    else { showToast(); }
+    if (!error) {
+      showToast();
+      if (field === 'status' || field === 'est_value') updateStats();
+    }
     revertCell(tr, cell, att);
   };
 
   control.addEventListener('blur', commit);
   control.addEventListener('keydown', e => {
     if (e.key === 'Enter' && field !== 'notes' && field !== 'next_action') { e.preventDefault(); control.blur(); }
-    if (e.key === 'Escape') { revertCell(tr, cell, att); }
+    if (e.key === 'Escape') revertCell(tr, cell, att);
   });
-  if (field === 'status') control.addEventListener('change', () => control.blur());
-  if (field === 'next_action_due') control.addEventListener('change', () => control.blur());
 }
 
 function revertCell(tr, cell, att) {
@@ -683,11 +951,11 @@ function revertCell(tr, cell, att) {
   }
 }
 
-// ── Add / Delete attendee ──────────────────────────────────────────────────
+// ── Add / Delete attendee ──────────────────────────────────────────────────────
 async function addAttendee() {
   if (!currentExpo) return;
   const { data, error } = await sb.from('attendees')
-    .insert({ expo_id: currentExpo.id, status: 'New' })
+    .insert({ expo_id: currentExpo.id, status: 'New', starred: false })
     .select().single();
   if (error) { console.error(error); return; }
   attendees.push(data);
@@ -695,8 +963,7 @@ async function addAttendee() {
   leadsBody.insertAdjacentHTML('beforeend', logRowHtml(data.id));
   const tr = leadsBody.querySelector(`tr.data-row[data-id="${data.id}"]`);
   attachRowEvents(tr);
-  const firstCell = tr.querySelector('[data-field="company"]');
-  if (firstCell) firstCell.click();
+  tr.querySelector('[data-field="company"]')?.click();
   showToast('Row added');
 }
 
@@ -708,36 +975,29 @@ async function deleteAttendee(tr) {
   const { error } = await sb.from('attendees').delete().eq('id', id);
   if (error) { console.error(error); return; }
   attendees = attendees.filter(a => a.id !== id);
-  // Remove both data row and log row
-  const logRow = leadsBody.querySelector(`tr.log-row[data-for="${id}"]`);
-  if (logRow) logRow.remove();
+  leadsBody.querySelector(`tr.log-row[data-for="${id}"]`)?.remove();
   tr.remove();
   delete interactionCache[id];
+  updateStats();
   showToast('Deleted');
 }
 
-// ── Interaction log ────────────────────────────────────────────────────────
+// ── Interaction log ────────────────────────────────────────────────────────────
 async function toggleLog(tr, attendeeId) {
   const btn    = tr.querySelector('.expand-btn');
   const logRow = leadsBody.querySelector(`tr.log-row[data-for="${attendeeId}"]`);
   if (!logRow) return;
 
   const isOpen = logRow.classList.contains('open');
-  if (isOpen) {
-    logRow.classList.remove('open');
-    btn.classList.remove('open');
-    return;
-  }
+  if (isOpen) { logRow.classList.remove('open'); btn.classList.remove('open'); return; }
 
-  // Open — load if not cached
   logRow.classList.add('open');
   btn.classList.add('open');
 
-  if (!interactionCache[attendeeId]) {
-    await loadInteractions(attendeeId);
-  }
+  if (!interactionCache[attendeeId]) await loadInteractions(attendeeId);
   renderLogPanel(attendeeId);
   wireLogPanel(attendeeId);
+  wireFulfillmentPanel(attendeeId);
 }
 
 async function loadInteractions(attendeeId) {
@@ -755,7 +1015,6 @@ function renderLogPanel(attendeeId) {
   if (!panel) return;
   const timeline = panel.querySelector('.log-timeline');
   const entries  = interactionCache[attendeeId] || [];
-
   if (entries.length === 0) {
     timeline.innerHTML = '<div class="log-empty">No interactions yet.</div>';
   } else {
@@ -772,8 +1031,6 @@ function wireLogPanel(attendeeId) {
   const panel   = leadsBody.querySelector(`.log-panel[data-id="${attendeeId}"]`);
   if (!panel) return;
   const saveBtn = panel.querySelector('.log-save-btn');
-
-  // Prevent multiple bindings
   if (saveBtn.dataset.wired) return;
   saveBtn.dataset.wired = '1';
 
@@ -782,11 +1039,9 @@ function wireLogPanel(attendeeId) {
     const noteInput = panel.querySelector('.log-note-input');
     const note = noteInput.value.trim();
     if (!note) { noteInput.focus(); return; }
-
     const payload = { attendee_id: attendeeId, date: dateInput.value || today(), note };
     const { data, error } = await sb.from('interactions').insert(payload).select().single();
     if (error) { console.error(error); return; }
-
     interactionCache[attendeeId] = [data, ...(interactionCache[attendeeId] || [])];
     noteInput.value = '';
     dateInput.value = today();
@@ -795,11 +1050,136 @@ function wireLogPanel(attendeeId) {
   });
 
   panel.querySelector('.log-note-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); saveBtn.click(); }
+    if (e.key === 'Enter') { e.preventDefault(); panel.querySelector('.log-save-btn').click(); }
   });
 }
 
-// ── Events ─────────────────────────────────────────────────────────────────
+function wireFulfillmentPanel(attendeeId) {
+  const panel = leadsBody.querySelector(`.log-panel[data-id="${attendeeId}"]`);
+  if (!panel || panel.dataset.fulfillmentWired) return;
+  panel.dataset.fulfillmentWired = '1';
+
+  const att         = attendees.find(a => a.id === attendeeId);
+  const typeInputs  = panel.querySelectorAll('.fulfillment-type');
+  const addrSection = panel.querySelector('.fulfillment-addr-section');
+  const addrInput   = panel.querySelector('.fulfillment-addr-input');
+  const dateInput   = panel.querySelector('.fulfillment-date-input');
+  const timeInput   = panel.querySelector('.fulfillment-time-input');
+  const saveBtn     = panel.querySelector('.fulfillment-save-btn');
+
+  if (att?.fulfillment_type) {
+    const radio = panel.querySelector(`input[value="${att.fulfillment_type}"]`);
+    if (radio) radio.checked = true;
+    if (att.fulfillment_type === 'delivery') addrSection.style.display = '';
+  }
+  if (att?.delivery_address)  addrInput.value = att.delivery_address;
+  if (att?.scheduled_date)    dateInput.value = att.scheduled_date;
+  if (att?.scheduled_time)    timeInput.value = att.scheduled_time;
+
+  typeInputs.forEach(inp => {
+    inp.addEventListener('change', () => {
+      addrSection.style.display = inp.value === 'delivery' ? '' : 'none';
+    });
+  });
+
+  saveBtn.addEventListener('click', async () => {
+    const fulfillment_type  = [...typeInputs].find(i => i.checked)?.value || null;
+    const delivery_address  = addrInput.value.trim() || null;
+    const scheduled_date    = dateInput.value || null;
+    const scheduled_time    = timeInput.value || null;
+    const { error } = await sb.from('attendees')
+      .update({ fulfillment_type, delivery_address, scheduled_date, scheduled_time })
+      .eq('id', attendeeId);
+    if (!error) {
+      if (att) {
+        att.fulfillment_type  = fulfillment_type;
+        att.delivery_address  = delivery_address;
+        att.scheduled_date    = scheduled_date;
+        att.scheduled_time    = scheduled_time;
+      }
+      showToast('Fulfillment saved');
+    }
+  });
+}
+
+// ── PDF Export ─────────────────────────────────────────────────────────────────
+function exportPDF() {
+  if (!currentExpo) { showToast('Select an expo first'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm' });
+
+  doc.setFontSize(18);
+  doc.setFont(undefined, 'bold');
+  doc.text(currentExpo.name, 14, 18);
+
+  doc.setFontSize(10);
+  doc.setFont(undefined, 'normal');
+  doc.setTextColor(110, 110, 115);
+  const metaParts = [];
+  if (currentExpo.date)     metaParts.push(fmtDate(currentExpo.date));
+  if (currentExpo.location) metaParts.push(currentExpo.location);
+  if (metaParts.length) doc.text(metaParts.join('  ·  '), 14, 25);
+
+  const wonVal     = attendees.filter(a => a.status === 'Ordered and Paid').reduce((s,a) => s + (a.est_value || 0), 0);
+  const closingVal = attendees.filter(a => a.status === 'Ordered and Unpaid').reduce((s,a) => s + (a.est_value || 0), 0);
+  doc.setTextColor(29, 29, 31);
+  doc.text(`Total Won: ${fmtCurrency(wonVal) || '$0'}     Total Closing: ${fmtCurrency(closingVal) || '$0'}`, 14, 31);
+
+  const head = [['★', 'Company', 'Contact', 'Source', 'Phone', 'Status', 'Qty', 'Value', 'Next Action', 'Due Date', 'Notes']];
+  const body = sortedAttendees().map(a => [
+    a.starred ? '★' : '',
+    a.company || '',
+    a.contact_name || '',
+    a.source || '',
+    a.phone || '',
+    a.status || '',
+    a.est_quantity != null ? a.est_quantity : '',
+    a.est_value != null ? fmtCurrency(a.est_value) : '',
+    a.next_action || '',
+    a.next_action_due ? fmtDate(a.next_action_due) : '',
+    a.notes || '',
+  ]);
+
+  doc.autoTable({
+    head,
+    body,
+    startY: 36,
+    styles: { fontSize: 8, cellPadding: 2.5, overflow: 'linebreak' },
+    headStyles: { fillColor: [250, 250, 250], textColor: [110, 110, 115], fontStyle: 'bold', lineColor: [220, 220, 220], lineWidth: 0.3 },
+    bodyStyles: { textColor: [29, 29, 31] },
+    columnStyles: {
+      0: { cellWidth: 7,  halign: 'center' },
+      5: { cellWidth: 26 },
+      6: { cellWidth: 10, halign: 'right' },
+      7: { cellWidth: 18, halign: 'right' },
+      8: { cellWidth: 32 },
+      9: { cellWidth: 22 },
+      10:{ cellWidth: 32 },
+    },
+    alternateRowStyles: { fillColor: [249, 249, 251] },
+    theme: 'grid',
+  });
+
+  const safeName = currentExpo.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+  doc.save(`${safeName}_leads.pdf`);
+  showToast('PDF exported');
+}
+
+// ── Sort header click events ───────────────────────────────────────────────────
+document.querySelectorAll('thead th.sortable').forEach(th => {
+  th.addEventListener('click', () => {
+    const field = th.dataset.sort;
+    if (sortField === field) {
+      sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      sortField = field;
+      sortDir = field === 'starred' ? 'desc' : 'asc';
+    }
+    renderTable();
+  });
+});
+
+// ── Global events ──────────────────────────────────────────────────────────────
 btnAddExpo.addEventListener('click', () => {
   addExpoPanel.classList.contains('open') ? hideAddExpoPanel() : showAddExpoPanel();
 });
@@ -808,8 +1188,9 @@ btnSaveExpo.addEventListener('click', createExpo);
 expoNameInput.addEventListener('keydown', e => { if (e.key === 'Enter') createExpo(); });
 expoSelect.addEventListener('change', () => selectExpo(expoSelect.value));
 btnAddAttendee.addEventListener('click', addAttendee);
+btnExportPdf.addEventListener('click', exportPDF);
 
-// ── Init ───────────────────────────────────────────────────────────────────
+// ── Init ───────────────────────────────────────────────────────────────────────
 await loadExpos();
 if (expos.length > 0) {
   expoSelect.value = expos[0].id;
