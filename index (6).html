@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cookie Leads</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background: #f5f5f7;
+  color: #1d1d1f;
+  font-size: 14px;
+  min-height: 100vh;
+}
+
+/* ── Top bar ── */
+.topbar {
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+  padding: 0 28px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.topbar h1 {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #1d1d1f;
+  margin-right: 4px;
+  white-space: nowrap;
+}
+.expo-select {
+  border: 1px solid rgba(0,0,0,0.15);
+  border-radius: 8px;
+  padding: 6px 28px 6px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  background: rgba(255,255,255,0.8) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236e6e73'/%3E%3C/svg%3E") no-repeat right 10px center;
+  -webkit-appearance: none;
+  appearance: none;
+  color: #1d1d1f;
+  cursor: pointer;
+  min-width: 220px;
+  transition: border-color .15s, box-shadow .15s;
+}
+.expo-select:focus { outline: none; border-color: #0071e3; box-shadow: 0 0 0 3px rgba(0,113,227,0.2); }
+
+.btn {
+  border: 1px solid rgba(0,0,0,0.15);
+  background: rgba(255,255,255,0.9);
+  color: #1d1d1f;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s, box-shadow .15s;
+  letter-spacing: -0.01em;
+}
+.btn:hover { background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+.btn:active { transform: scale(0.98); }
+.btn.primary { background: #0071e3; color: #fff; border-color: transparent; font-weight: 500; }
+.btn.primary:hover { background: #0077ed; box-shadow: 0 2px 8px rgba(0,113,227,0.35); }
+.btn.danger { border-color: transparent; color: #ff3b30; background: rgba(255,59,48,0.08); }
+.btn.danger:hover { background: rgba(255,59,48,0.14); }
+
+/* ── Add expo panel ── */
+.add-expo-panel {
+  display: none;
+  padding: 14px 28px;
+  background: #fff;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+.add-expo-panel.open { display: flex; }
+.panel-input {
+  border: 1px solid rgba(0,0,0,0.15);
+  border-radius: 8px;
+  padding: 7px 11px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #1d1d1f;
+  background: #f5f5f7;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+}
+.panel-input:focus { outline: none; border-color: #0071e3; box-shadow: 0 0 0 3px rgba(0,113,227,0.2); background: #fff; }
+.panel-input::placeholder { color: #aeaeb2; }
+.panel-input[type="date"] { min-width: 150px; }
+.panel-input.name-input { min-width: 210px; }
+.panel-input.loc-input  { min-width: 190px; }
+
+/* ── Toast ── */
+.toast {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  background: rgba(29,29,31,0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #fff;
+  padding: 9px 18px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s, transform .25s;
+  transform: translateY(8px);
+  z-index: 100;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* ── Main ── */
+.main { padding: 28px; }
+.expo-header { margin-bottom: 18px; display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.expo-title { font-size: 22px; font-weight: 700; letter-spacing: -0.03em; color: #1d1d1f; }
+.expo-meta { font-size: 13px; color: #6e6e73; font-weight: 400; }
+
+/* ── Card & table ── */
+.table-card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.05);
+  overflow: hidden;
+}
+.table-wrap { overflow-x: auto; }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+thead th {
+  text-align: left;
+  padding: 11px 12px;
+  border-bottom: 1px solid rgba(0,0,0,0.07);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: #6e6e73;
+  white-space: nowrap;
+  background: #fafafa;
+}
+thead th.th-expand { width: 36px; padding: 11px 6px; }
+thead th.th-actions { width: 44px; padding: 11px 6px; }
+
+tbody tr { border-bottom: 1px solid rgba(0,0,0,0.055); transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr.data-row:hover { background: #f5f5f7; }
+tbody tr.data-row.editing { background: #fff8e1; }
+
+td { padding: 0; vertical-align: middle; }
+
+.cell-inner {
+  padding: 10px 12px;
+  min-height: 40px;
+  cursor: pointer;
+  display: block;
+  white-space: pre-wrap;
+  word-break: break-word;
+  min-width: 80px;
+  color: #1d1d1f;
+  border-radius: 6px;
+  transition: background .1s;
+}
+.cell-inner:empty::before { content: '—'; color: #d1d1d6; }
+.cell-inner:hover { background: rgba(0,0,0,0.05); }
+
+td input.cell-edit,
+td textarea.cell-edit {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-family: inherit;
+  color: #1d1d1f;
+  padding: 10px 12px;
+  outline: 2px solid #0071e3;
+  outline-offset: -2px;
+  border-radius: 6px;
+  resize: none;
+  min-width: 80px;
+}
+td select.cell-edit {
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-family: inherit;
+  color: #1d1d1f;
+  padding: 10px 12px;
+  outline: 2px solid #0071e3;
+  outline-offset: -2px;
+  border-radius: 6px;
+  width: 100%;
+  cursor: pointer;
+}
+
+/* ── Expand button ── */
+.expand-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #c7c7cc;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color .15s, background .15s, transform .2s;
+  flex-shrink: 0;
+}
+.expand-btn svg { width: 10px; height: 10px; transition: transform .2s; }
+.expand-btn:hover { color: #1d1d1f; background: rgba(0,0,0,0.06); }
+.expand-btn.open { color: #0071e3; }
+.expand-btn.open svg { transform: rotate(90deg); }
+
+/* ── Delete button ── */
+.del-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #c7c7cc;
+  font-size: 18px;
+  line-height: 1;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color .15s, background .15s;
+}
+.del-btn:hover { color: #ff3b30; background: rgba(255,59,48,0.1); }
+
+/* ── Due date colours ── */
+.due-past  { color: #d70015; font-weight: 500; }
+.due-today { color: #b45309; font-weight: 500; }
+
+/* ── Add row ── */
+.add-row td { border-top: 1px solid rgba(0,0,0,0.07); background: #fafafa; }
+.add-row-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #0071e3;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 11px 14px;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  letter-spacing: -0.01em;
+  transition: color .1s;
+}
+.add-row-btn:hover { color: #0077ed; }
+.add-row-btn::before { content: '+'; font-size: 17px; font-weight: 300; line-height: 1; }
+
+/* ── Status pills ── */
+.pill { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; letter-spacing: 0.01em; }
+.pill-New       { background: rgba(110,110,115,0.12); color: #3a3a3c; }
+.pill-Contacted { background: rgba(0,113,227,0.12);   color: #0071e3; }
+.pill-Mockup    { background: rgba(94,92,230,0.12);   color: #5856d6; }
+.pill-Quoted    { background: rgba(255,159,10,0.14);  color: #b45309; }
+.pill-Won       { background: rgba(52,199,89,0.14);   color: #1a7f37; }
+.pill-Lost      { background: rgba(255,59,48,0.12);   color: #d70015; }
+
+/* ── Interaction log row ── */
+.log-row { display: none; }
+.log-row.open { display: table-row; }
+.log-row > td {
+  background: #f9f9fb;
+  border-bottom: 1px solid rgba(0,0,0,0.07);
+  padding: 14px 16px 14px 52px;
+}
+
+.log-timeline { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+.log-entry {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+.log-entry:last-child { border-bottom: none; }
+.log-entry-date { color: #6e6e73; white-space: nowrap; min-width: 82px; }
+.log-entry-note { color: #1d1d1f; }
+.log-empty { font-size: 12px; color: #aeaeb2; margin-bottom: 12px; }
+
+.log-add { display: flex; gap: 8px; align-items: center; }
+.log-add input[type="date"],
+.log-add input[type="text"] {
+  border: 1px solid rgba(0,0,0,0.15);
+  border-radius: 6px;
+  padding: 5px 9px;
+  font-size: 12px;
+  font-family: inherit;
+  color: #1d1d1f;
+  background: #fff;
+  transition: border-color .15s, box-shadow .15s;
+}
+.log-add input[type="date"] { min-width: 138px; }
+.log-add input[type="text"] { flex: 1; min-width: 160px; }
+.log-add input:focus { outline: none; border-color: #0071e3; box-shadow: 0 0 0 2px rgba(0,113,227,0.2); }
+.log-add input::placeholder { color: #aeaeb2; }
+.log-save-btn {
+  border: 1px solid rgba(0,0,0,0.15);
+  background: #fff;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  color: #0071e3;
+  white-space: nowrap;
+  transition: background .1s;
+}
+.log-save-btn:hover { background: #f0f7ff; }
+
+/* ── No expo ── */
+.no-expo { padding: 60px 0; color: #6e6e73; font-size: 15px; font-weight: 400; letter-spacing: -0.01em; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>Cookie Leads</h1>
+  <select id="expo-select" class="expo-select">
+    <option value="">— Select an expo —</option>
+  </select>
+  <button class="btn primary" id="btn-add-expo">+ Add expo</button>
+</div>
+
+<div class="add-expo-panel" id="add-expo-panel">
+  <input class="panel-input name-input" id="expo-name" type="text" placeholder="Expo name" autocomplete="off">
+  <input class="panel-input" id="expo-date" type="date">
+  <input class="panel-input loc-input" id="expo-location" type="text" placeholder="Location" autocomplete="off">
+  <button class="btn primary" id="btn-save-expo">Save expo</button>
+  <button class="btn" id="btn-cancel-expo">Cancel</button>
+</div>
+
+<div class="main" id="main">
+  <div class="no-expo" id="no-expo">Select an expo above, or create a new one.</div>
+  <div id="expo-view" style="display:none">
+    <div class="expo-header">
+      <div class="expo-title" id="expo-title"></div>
+      <div class="expo-meta" id="expo-meta"></div>
+    </div>
+    <div class="table-card"><div class="table-wrap">
+      <table id="leads-table">
+        <thead>
+          <tr>
+            <th class="th-expand"></th>
+            <th>Company</th>
+            <th>Contact name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Status</th>
+            <th>Qty</th>
+            <th>Est. value</th>
+            <th>Next action</th>
+            <th>Due date</th>
+            <th style="min-width:160px">Notes</th>
+            <th class="th-actions"></th>
+          </tr>
+        </thead>
+        <tbody id="leads-body"></tbody>
+        <tfoot>
+          <tr class="add-row">
+            <td colspan="12">
+              <button class="add-row-btn" id="btn-add-attendee">Add attendee</button>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Saved</div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+const SUPABASE_URL = 'https://fbtqvkxnpzaocuzrrfrb.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_TXnkHlpcOU7HrCrkqNPhAg_BwpWzLN9';
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const STATUSES = ['New', 'Contacted', 'Mockup sent', 'Quoted', 'Won', 'Lost'];
+const PILL_CLASS = {
+  'New': 'pill-New', 'Contacted': 'pill-Contacted', 'Mockup sent': 'pill-Mockup',
+  'Quoted': 'pill-Quoted', 'Won': 'pill-Won', 'Lost': 'pill-Lost',
+};
+
+// ── State ──────────────────────────────────────────────────────────────────
+let expos       = [];
+let currentExpo = null;
+let attendees   = [];
+const interactionCache = {};  // attendee_id -> interactions[]
+
+// ── DOM refs ───────────────────────────────────────────────────────────────
+const expoSelect     = document.getElementById('expo-select');
+const addExpoPanel   = document.getElementById('add-expo-panel');
+const btnAddExpo     = document.getElementById('btn-add-expo');
+const btnSaveExpo    = document.getElementById('btn-save-expo');
+const btnCancelExpo  = document.getElementById('btn-cancel-expo');
+const expoNameInput  = document.getElementById('expo-name');
+const expoDateInput  = document.getElementById('expo-date');
+const expoLocInput   = document.getElementById('expo-location');
+const noExpo         = document.getElementById('no-expo');
+const expoView       = document.getElementById('expo-view');
+const expoTitle      = document.getElementById('expo-title');
+const expoMeta       = document.getElementById('expo-meta');
+const leadsBody      = document.getElementById('leads-body');
+const btnAddAttendee = document.getElementById('btn-add-attendee');
+const toast          = document.getElementById('toast');
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+let toastTimer = null;
+function showToast(msg = 'Saved') {
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function esc(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function today() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function fmtDate(d) {
+  if (!d) return '';
+  const [y, m, day] = d.split('-');
+  return new Date(+y, +m - 1, +day).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function fmtCurrency(v) {
+  if (v == null || v === '') return '';
+  return '$' + Number(v).toLocaleString('en-NZ', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+
+function pillHtml(status) {
+  const cls = PILL_CLASS[status] || 'pill-New';
+  return `<span class="pill ${cls}">${esc(status || 'New')}</span>`;
+}
+
+function dueDateHtml(d) {
+  if (!d) return '';
+  const t = today();
+  const cls = d < t ? 'due-past' : d === t ? 'due-today' : '';
+  return cls ? `<span class="${cls}">${esc(fmtDate(d))}</span>` : esc(fmtDate(d));
+}
+
+// ── Expos ──────────────────────────────────────────────────────────────────
+async function loadExpos() {
+  const { data, error } = await sb.from('expos').select('*').order('date', { ascending: false });
+  if (error) { console.error(error); return; }
+  expos = data || [];
+  renderExpoSelect();
+}
+
+function renderExpoSelect() {
+  const prev = expoSelect.value;
+  expoSelect.innerHTML = '<option value="">— Select an expo —</option>';
+  expos.forEach(e => {
+    const opt = document.createElement('option');
+    opt.value = e.id;
+    opt.textContent = e.name + (e.date ? ' · ' + fmtDate(e.date) : '');
+    expoSelect.appendChild(opt);
+  });
+  if (prev && expos.find(e => e.id === prev)) expoSelect.value = prev;
+}
+
+async function createExpo() {
+  const name = expoNameInput.value.trim();
+  if (!name) { expoNameInput.focus(); return; }
+  const payload = { name, date: expoDateInput.value || null, location: expoLocInput.value.trim() || null };
+  const { data, error } = await sb.from('expos').insert(payload).select().single();
+  if (error) { console.error(error); return; }
+  expos.unshift(data);
+  renderExpoSelect();
+  expoSelect.value = data.id;
+  hideAddExpoPanel();
+  clearAddExpoForm();
+  await selectExpo(data.id);
+  showToast('Expo created');
+}
+
+function clearAddExpoForm() { expoNameInput.value = ''; expoDateInput.value = ''; expoLocInput.value = ''; }
+function showAddExpoPanel() { addExpoPanel.classList.add('open'); expoNameInput.focus(); }
+function hideAddExpoPanel() { addExpoPanel.classList.remove('open'); }
+
+// ── Expo selection ─────────────────────────────────────────────────────────
+async function selectExpo(id) {
+  currentExpo = expos.find(e => e.id === id) || null;
+  if (!currentExpo) {
+    noExpo.style.display = '';
+    expoView.style.display = 'none';
+    return;
+  }
+  noExpo.style.display = 'none';
+  expoView.style.display = '';
+  expoTitle.textContent = currentExpo.name;
+  const parts = [];
+  if (currentExpo.date)     parts.push(fmtDate(currentExpo.date));
+  if (currentExpo.location) parts.push(currentExpo.location);
+  expoMeta.textContent = parts.join(' · ');
+  await loadAttendees();
+}
+
+// ── Attendees ──────────────────────────────────────────────────────────────
+async function loadAttendees() {
+  if (!currentExpo) return;
+  const { data, error } = await sb.from('attendees')
+    .select('*')
+    .eq('expo_id', currentExpo.id)
+    .order('next_action_due', { ascending: true, nullsFirst: false })
+    .order('created_at', { ascending: true });
+  if (error) { console.error(error); return; }
+  attendees = data || [];
+  renderTable();
+}
+
+function renderTable() {
+  leadsBody.innerHTML = '';
+  attendees.forEach(a => {
+    leadsBody.insertAdjacentHTML('beforeend', rowHtml(a));
+    leadsBody.insertAdjacentHTML('beforeend', logRowHtml(a.id));
+  });
+  leadsBody.querySelectorAll('tr.data-row').forEach(tr => attachRowEvents(tr));
+}
+
+function rowHtml(a) {
+  return `<tr class="data-row" data-id="${esc(a.id)}">
+    <td style="text-align:center;padding:0 4px">
+      <button class="expand-btn" title="Interaction log">
+        <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3,2 7,5 3,8"/>
+        </svg>
+      </button>
+    </td>
+    <td><span class="cell-inner" data-field="company">${esc(a.company)}</span></td>
+    <td><span class="cell-inner" data-field="contact_name">${esc(a.contact_name)}</span></td>
+    <td><span class="cell-inner" data-field="email">${esc(a.email)}</span></td>
+    <td><span class="cell-inner" data-field="phone">${esc(a.phone)}</span></td>
+    <td><span class="cell-inner" data-field="status">${pillHtml(a.status || 'New')}</span></td>
+    <td><span class="cell-inner" data-field="est_quantity">${esc(a.est_quantity)}</span></td>
+    <td><span class="cell-inner" data-field="est_value">${a.est_value != null ? fmtCurrency(a.est_value) : ''}</span></td>
+    <td><span class="cell-inner" data-field="next_action">${esc(a.next_action)}</span></td>
+    <td><span class="cell-inner" data-field="next_action_due">${dueDateHtml(a.next_action_due)}</span></td>
+    <td><span class="cell-inner" data-field="notes">${esc(a.notes)}</span></td>
+    <td style="text-align:center;padding:0 4px"><button class="del-btn" title="Delete">×</button></td>
+  </tr>`;
+}
+
+function logRowHtml(attendeeId) {
+  return `<tr class="log-row" data-for="${esc(attendeeId)}">
+    <td colspan="12"><div class="log-panel" data-id="${esc(attendeeId)}">
+      <div class="log-timeline"></div>
+      <div class="log-add">
+        <input type="date" class="log-date-input" value="${today()}">
+        <input type="text" class="log-note-input" placeholder="Add a note…">
+        <button class="log-save-btn">Save</button>
+      </div>
+    </div></td>
+  </tr>`;
+}
+
+function attachRowEvents(tr) {
+  const id = tr.dataset.id;
+  tr.querySelectorAll('.cell-inner').forEach(cell => {
+    cell.addEventListener('click', () => startEdit(tr, cell));
+  });
+  tr.querySelector('.del-btn').addEventListener('click', () => deleteAttendee(tr));
+  tr.querySelector('.expand-btn').addEventListener('click', () => toggleLog(tr, id));
+}
+
+// ── Inline editing ─────────────────────────────────────────────────────────
+function startEdit(tr, cell) {
+  if (cell.querySelector('input, select, textarea')) return;
+
+  const field = cell.dataset.field;
+  const id    = tr.dataset.id;
+  const att   = attendees.find(a => a.id === id);
+  if (!att) return;
+
+  tr.classList.add('editing');
+  let control;
+
+  if (field === 'status') {
+    control = document.createElement('select');
+    control.className = 'cell-edit';
+    STATUSES.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s; opt.textContent = s;
+      if (s === (att.status || 'New')) opt.selected = true;
+      control.appendChild(opt);
+    });
+  } else if (field === 'notes' || field === 'next_action') {
+    control = document.createElement('textarea');
+    control.className = 'cell-edit';
+    control.rows = field === 'notes' ? 2 : 1;
+    control.value = att[field] || '';
+  } else if (field === 'next_action_due') {
+    control = document.createElement('input');
+    control.className = 'cell-edit';
+    control.type = 'date';
+    control.value = att[field] || '';
+  } else {
+    control = document.createElement('input');
+    control.className = 'cell-edit';
+    control.type = field === 'est_quantity' || field === 'est_value' ? 'number' : 'text';
+    if (field === 'est_value') control.step = '0.01';
+    control.value = att[field] != null ? att[field] : '';
+  }
+
+  cell.innerHTML = '';
+  cell.appendChild(control);
+  control.focus();
+  if (control.select) control.select();
+
+  const commit = async () => {
+    const newVal = control.value;
+    let parsed = newVal === '' ? null : newVal;
+    if (field === 'est_quantity') parsed = newVal === '' ? null : parseInt(newVal, 10);
+    if (field === 'est_value')    parsed = newVal === '' ? null : parseFloat(newVal);
+
+    if (parsed === att[field] || (parsed == null && att[field] == null)) {
+      revertCell(tr, cell, att);
+      return;
+    }
+
+    att[field] = parsed;
+    const { error } = await sb.from('attendees').update({ [field]: parsed }).eq('id', id);
+    if (error) { console.error(error); }
+    else { showToast(); }
+    revertCell(tr, cell, att);
+  };
+
+  control.addEventListener('blur', commit);
+  control.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && field !== 'notes' && field !== 'next_action') { e.preventDefault(); control.blur(); }
+    if (e.key === 'Escape') { revertCell(tr, cell, att); }
+  });
+  if (field === 'status') control.addEventListener('change', () => control.blur());
+  if (field === 'next_action_due') control.addEventListener('change', () => control.blur());
+}
+
+function revertCell(tr, cell, att) {
+  tr.classList.remove('editing');
+  const field = cell.dataset.field;
+  if (field === 'status') {
+    cell.innerHTML = pillHtml(att.status || 'New');
+  } else if (field === 'est_value') {
+    cell.innerHTML = att.est_value != null ? esc(fmtCurrency(att.est_value)) : '';
+  } else if (field === 'next_action_due') {
+    cell.innerHTML = dueDateHtml(att.next_action_due);
+  } else {
+    cell.textContent = att[field] != null ? att[field] : '';
+  }
+}
+
+// ── Add / Delete attendee ──────────────────────────────────────────────────
+async function addAttendee() {
+  if (!currentExpo) return;
+  const { data, error } = await sb.from('attendees')
+    .insert({ expo_id: currentExpo.id, status: 'New' })
+    .select().single();
+  if (error) { console.error(error); return; }
+  attendees.push(data);
+  leadsBody.insertAdjacentHTML('beforeend', rowHtml(data));
+  leadsBody.insertAdjacentHTML('beforeend', logRowHtml(data.id));
+  const tr = leadsBody.querySelector(`tr.data-row[data-id="${data.id}"]`);
+  attachRowEvents(tr);
+  const firstCell = tr.querySelector('[data-field="company"]');
+  if (firstCell) firstCell.click();
+  showToast('Row added');
+}
+
+async function deleteAttendee(tr) {
+  const id  = tr.dataset.id;
+  const att = attendees.find(a => a.id === id);
+  const label = att?.company || att?.contact_name || 'this attendee';
+  if (!confirm(`Delete ${label}?`)) return;
+  const { error } = await sb.from('attendees').delete().eq('id', id);
+  if (error) { console.error(error); return; }
+  attendees = attendees.filter(a => a.id !== id);
+  // Remove both data row and log row
+  const logRow = leadsBody.querySelector(`tr.log-row[data-for="${id}"]`);
+  if (logRow) logRow.remove();
+  tr.remove();
+  delete interactionCache[id];
+  showToast('Deleted');
+}
+
+// ── Interaction log ────────────────────────────────────────────────────────
+async function toggleLog(tr, attendeeId) {
+  const btn    = tr.querySelector('.expand-btn');
+  const logRow = leadsBody.querySelector(`tr.log-row[data-for="${attendeeId}"]`);
+  if (!logRow) return;
+
+  const isOpen = logRow.classList.contains('open');
+  if (isOpen) {
+    logRow.classList.remove('open');
+    btn.classList.remove('open');
+    return;
+  }
+
+  // Open — load if not cached
+  logRow.classList.add('open');
+  btn.classList.add('open');
+
+  if (!interactionCache[attendeeId]) {
+    await loadInteractions(attendeeId);
+  }
+  renderLogPanel(attendeeId);
+  wireLogPanel(attendeeId);
+}
+
+async function loadInteractions(attendeeId) {
+  const { data, error } = await sb.from('interactions')
+    .select('*')
+    .eq('attendee_id', attendeeId)
+    .order('date', { ascending: false })
+    .order('created_at', { ascending: false });
+  if (error) { console.error(error); return; }
+  interactionCache[attendeeId] = data || [];
+}
+
+function renderLogPanel(attendeeId) {
+  const panel    = leadsBody.querySelector(`.log-panel[data-id="${attendeeId}"]`);
+  if (!panel) return;
+  const timeline = panel.querySelector('.log-timeline');
+  const entries  = interactionCache[attendeeId] || [];
+
+  if (entries.length === 0) {
+    timeline.innerHTML = '<div class="log-empty">No interactions yet.</div>';
+  } else {
+    timeline.innerHTML = entries.map(e =>
+      `<div class="log-entry">
+        <span class="log-entry-date">${esc(fmtDate(e.date))}</span>
+        <span class="log-entry-note">${esc(e.note)}</span>
+      </div>`
+    ).join('');
+  }
+}
+
+function wireLogPanel(attendeeId) {
+  const panel   = leadsBody.querySelector(`.log-panel[data-id="${attendeeId}"]`);
+  if (!panel) return;
+  const saveBtn = panel.querySelector('.log-save-btn');
+
+  // Prevent multiple bindings
+  if (saveBtn.dataset.wired) return;
+  saveBtn.dataset.wired = '1';
+
+  saveBtn.addEventListener('click', async () => {
+    const dateInput = panel.querySelector('.log-date-input');
+    const noteInput = panel.querySelector('.log-note-input');
+    const note = noteInput.value.trim();
+    if (!note) { noteInput.focus(); return; }
+
+    const payload = { attendee_id: attendeeId, date: dateInput.value || today(), note };
+    const { data, error } = await sb.from('interactions').insert(payload).select().single();
+    if (error) { console.error(error); return; }
+
+    interactionCache[attendeeId] = [data, ...(interactionCache[attendeeId] || [])];
+    noteInput.value = '';
+    dateInput.value = today();
+    renderLogPanel(attendeeId);
+    showToast('Note saved');
+  });
+
+  panel.querySelector('.log-note-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); saveBtn.click(); }
+  });
+}
+
+// ── Events ─────────────────────────────────────────────────────────────────
+btnAddExpo.addEventListener('click', () => {
+  addExpoPanel.classList.contains('open') ? hideAddExpoPanel() : showAddExpoPanel();
+});
+btnCancelExpo.addEventListener('click', () => { hideAddExpoPanel(); clearAddExpoForm(); });
+btnSaveExpo.addEventListener('click', createExpo);
+expoNameInput.addEventListener('keydown', e => { if (e.key === 'Enter') createExpo(); });
+expoSelect.addEventListener('change', () => selectExpo(expoSelect.value));
+btnAddAttendee.addEventListener('click', addAttendee);
+
+// ── Init ───────────────────────────────────────────────────────────────────
+await loadExpos();
+if (expos.length > 0) {
+  expoSelect.value = expos[0].id;
+  await selectExpo(expos[0].id);
+}
+</script>
+</body>
+</html>
