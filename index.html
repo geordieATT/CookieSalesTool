@@ -140,8 +140,11 @@ body {
 }
 .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: #6e6e73; margin-bottom: 4px; }
 .stat-value { font-size: 22px; font-weight: 700; letter-spacing: -0.03em; }
-.stat-value.won-color { color: #1a7f37; }
+.stat-value.won-color     { color: #1a7f37; }
 .stat-value.closing-color { color: #b45309; }
+.stat-value.cookies-color { color: #5856d6; }
+.stat-value.leads-color   { color: #0071e3; }
+.stat-value.pipeline-color{ color: #3a3a3c; }
 
 /* ── Card & table ── */
 .table-card {
@@ -694,6 +697,22 @@ td select.cell-edit {
         <div class="stat-label">Total Closing</div>
         <div class="stat-value closing-color" id="stat-closing">$0</div>
       </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Pipeline</div>
+        <div class="stat-value pipeline-color" id="stat-pipeline">$0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Cookies Ordered</div>
+        <div class="stat-value cookies-color" id="stat-cookies">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Cookies Won</div>
+        <div class="stat-value won-color" id="stat-cookies-won">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Leads</div>
+        <div class="stat-value leads-color" id="stat-leads">0</div>
+      </div>
     </div>
 
     <div class="table-card"><div class="table-wrap">
@@ -799,6 +818,10 @@ const btnAddAttendee   = document.getElementById('btn-add-attendee');
 const toast            = document.getElementById('toast');
 const statWon          = document.getElementById('stat-won');
 const statClosing      = document.getElementById('stat-closing');
+const statPipeline     = document.getElementById('stat-pipeline');
+const statCookies      = document.getElementById('stat-cookies');
+const statCookiesWon   = document.getElementById('stat-cookies-won');
+const statLeads        = document.getElementById('stat-leads');
 const btnExportPdf     = document.getElementById('btn-export-pdf');
 const msgModalOverlay  = document.getElementById('msg-modal-overlay');
 const msgModalTitle    = document.getElementById('msg-modal-title');
@@ -852,10 +875,18 @@ function dueDateHtml(d) {
 
 // ── Stats ──────────────────────────────────────────────────────────────────────
 function updateStats() {
-  const won     = attendees.filter(a=>a.status==='Ordered and Paid').reduce((s,a)=>s+(a.est_value||0),0);
-  const closing = attendees.filter(a=>a.status==='Ordered and Unpaid').reduce((s,a)=>s+(a.est_value||0),0);
-  statWon.textContent     = won     ? fmtCurrency(won)     : '$0';
-  statClosing.textContent = closing ? fmtCurrency(closing) : '$0';
+  const ACTIVE = ['New','In Contact','Waiting Reply','Ordered and Unpaid','Ordered and Paid'];
+  const won          = attendees.filter(a=>a.status==='Ordered and Paid').reduce((s,a)=>s+(a.est_value||0),0);
+  const closing      = attendees.filter(a=>a.status==='Ordered and Unpaid').reduce((s,a)=>s+(a.est_value||0),0);
+  const pipeline     = attendees.filter(a=>ACTIVE.includes(a.status)).reduce((s,a)=>s+(a.est_value||0),0);
+  const cookiesOrdered = attendees.filter(a=>a.status==='Ordered and Paid'||a.status==='Ordered and Unpaid').reduce((s,a)=>s+(a.est_quantity||0),0);
+  const cookiesWon   = attendees.filter(a=>a.status==='Ordered and Paid').reduce((s,a)=>s+(a.est_quantity||0),0);
+  statWon.textContent        = won        ? fmtCurrency(won)      : '$0';
+  statClosing.textContent    = closing    ? fmtCurrency(closing)  : '$0';
+  statPipeline.textContent   = pipeline   ? fmtCurrency(pipeline) : '$0';
+  statCookies.textContent    = cookiesOrdered.toLocaleString('en-NZ');
+  statCookiesWon.textContent = cookiesWon.toLocaleString('en-NZ');
+  statLeads.textContent      = attendees.length;
 }
 
 // ── Sort ───────────────────────────────────────────────────────────────────────
