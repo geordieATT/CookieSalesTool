@@ -495,7 +495,7 @@ td select.cell-edit {
       <table id="leads-table">
         <thead>
           <tr>
-            <th class="th-icon sortable" data-sort="starred" title="Sort by starred">★<span class="sort-arrow"></span></th>
+            <th class="th-icon sortable" data-sort="starred" title="Sort by starred">&#9733;<span class="sort-arrow"></span></th>
             <th class="th-icon"></th>
             <th class="sortable" data-sort="company">Company<span class="sort-arrow"></span></th>
             <th class="sortable" data-sort="contact_name">Contact<span class="sort-arrow"></span></th>
@@ -597,13 +597,13 @@ function fmtCurrency(v) {
 }
 function pillHtml(status) {
   const cls = PILL_CLASS[status] || 'pill-New';
-  return `<span class="pill ${cls}">${esc(status || 'New')}</span>`;
+  return '<span class="pill ' + cls + '">' + esc(status || 'New') + '</span>';
 }
 function dueDateHtml(d) {
   if (!d) return '';
   const t = today();
   const cls = d < t ? 'due-past' : d === t ? 'due-today' : '';
-  return cls ? `<span class="${cls}">${esc(fmtDate(d))}</span>` : esc(fmtDate(d));
+  return cls ? '<span class="' + cls + '">' + esc(fmtDate(d)) + '</span>' : esc(fmtDate(d));
 }
 
 // ── Stats ──────────────────────────────────────────────────────────────────────
@@ -639,7 +639,7 @@ function sortedAttendees() {
       const an = av ? 1 : 0, bn = bv ? 1 : 0;
       return sortDir === 'asc' ? an - bn : bn - an;
     }
-    if (typeof av === 'number' || (typeof av === 'string' && !isNaN(Number(av)) && av !== '')) {
+    if (typeof av === 'number' || (typeof av === 'string' && av !== '' && !isNaN(Number(av)))) {
       const na = Number(av), nb = Number(bv);
       return sortDir === 'asc' ? na - nb : nb - na;
     }
@@ -725,67 +725,67 @@ function renderTable() {
 }
 
 function rowHtml(a) {
-  return `<tr class="data-row${a.starred ? ' starred-row' : ''}" data-id="${esc(a.id)}">
-    <td style="text-align:center;padding:0 4px">
-      <button class="star-btn${a.starred ? ' starred' : ''}" title="${a.starred ? 'Unstar' : 'Star'}">${a.starred ? '★' : '☆'}</button>
-    </td>
-    <td style="text-align:center;padding:0 4px">
-      <button class="expand-btn" title="Interaction log &amp; fulfillment">
-        <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="3,2 7,5 3,8"/>
-        </svg>
-      </button>
-    </td>
-    <td><span class="cell-inner" data-field="company">${esc(a.company)}</span></td>
-    <td><span class="cell-inner" data-field="contact_name">${esc(a.contact_name)}</span></td>
-    <td><span class="cell-inner" data-field="source">${esc(a.source)}</span></td>
-    <td><span class="cell-inner" data-field="phone">${esc(a.phone)}</span></td>
-    <td><span class="cell-inner" data-field="status">${pillHtml(a.status || 'New')}</span></td>
-    <td><span class="cell-inner" data-field="est_quantity">${esc(a.est_quantity)}</span></td>
-    <td><span class="cell-inner" data-field="est_value">${a.est_value != null ? fmtCurrency(a.est_value) : ''}</span></td>
-    <td><span class="cell-inner" data-field="next_action">${esc(a.next_action)}</span></td>
-    <td><span class="cell-inner" data-field="next_action_due">${dueDateHtml(a.next_action_due)}</span></td>
-    <td><span class="cell-inner" data-field="notes">${esc(a.notes)}</span></td>
-    <td style="text-align:center;padding:0 4px"><button class="del-btn" title="Delete">×</button></td>
-  </tr>`;
+  return '<tr class="data-row' + (a.starred ? ' starred-row' : '') + '" data-id="' + esc(a.id) + '">' +
+    '<td style="text-align:center;padding:0 4px">' +
+      '<button class="star-btn' + (a.starred ? ' starred' : '') + '" title="' + (a.starred ? 'Unstar' : 'Star') + '">' + (a.starred ? '★' : '☆') + '</button>' +
+    '</td>' +
+    '<td style="text-align:center;padding:0 4px">' +
+      '<button class="expand-btn" title="Fulfillment &amp; log">' +
+        '<svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+          '<polyline points="3,2 7,5 3,8"/>' +
+        '</svg>' +
+      '</button>' +
+    '</td>' +
+    '<td><span class="cell-inner" data-field="company">' + esc(a.company) + '</span></td>' +
+    '<td><span class="cell-inner" data-field="contact_name">' + esc(a.contact_name) + '</span></td>' +
+    '<td><span class="cell-inner" data-field="source">' + esc(a.source) + '</span></td>' +
+    '<td><span class="cell-inner" data-field="phone">' + esc(a.phone) + '</span></td>' +
+    '<td><span class="cell-inner" data-field="status">' + pillHtml(a.status || 'New') + '</span></td>' +
+    '<td><span class="cell-inner" data-field="est_quantity">' + esc(a.est_quantity) + '</span></td>' +
+    '<td><span class="cell-inner" data-field="est_value">' + (a.est_value != null ? fmtCurrency(a.est_value) : '') + '</span></td>' +
+    '<td><span class="cell-inner" data-field="next_action">' + esc(a.next_action) + '</span></td>' +
+    '<td><span class="cell-inner" data-field="next_action_due">' + dueDateHtml(a.next_action_due) + '</span></td>' +
+    '<td><span class="cell-inner" data-field="notes">' + esc(a.notes) + '</span></td>' +
+    '<td style="text-align:center;padding:0 4px"><button class="del-btn" title="Delete">×</button></td>' +
+  '</tr>';
 }
 
 function logRowHtml(id) {
-  return `<tr class="log-row" data-for="${esc(id)}">
-    <td colspan="13">
-      <div class="log-panel" data-id="${esc(id)}">
-        <div class="log-panel-inner">
+  return '<tr class="log-row" data-for="' + esc(id) + '">' +
+    '<td colspan="13">' +
+      '<div class="log-panel" data-id="' + esc(id) + '">' +
+        '<div class="log-panel-inner">' +
 
-          <div class="fulfillment-section">
-            <div class="panel-section-title">Fulfillment</div>
-            <div class="fulfillment-radios">
-              <label><input type="radio" name="ft-${esc(id)}" class="fulfillment-type" value="pickup"> Pickup</label>
-              <label><input type="radio" name="ft-${esc(id)}" class="fulfillment-type" value="delivery"> Delivery</label>
-            </div>
-            <div class="fulfillment-addr-section">
-              <input type="text" class="fulfillment-addr-input" placeholder="Delivery address…">
-            </div>
-            <div class="fulfillment-datetime">
-              <input type="date" class="fulfillment-date-input" title="Scheduled date">
-              <input type="time" class="fulfillment-time-input" title="Scheduled time">
-            </div>
-            <button class="fulfillment-save-btn">Save fulfillment</button>
-          </div>
+          '<div class="fulfillment-section">' +
+            '<div class="panel-section-title">Fulfillment</div>' +
+            '<div class="fulfillment-radios">' +
+              '<label><input type="radio" name="ft-' + esc(id) + '" class="fulfillment-type" value="pickup"> Pickup</label>' +
+              '<label><input type="radio" name="ft-' + esc(id) + '" class="fulfillment-type" value="delivery"> Delivery</label>' +
+            '</div>' +
+            '<div class="fulfillment-addr-section">' +
+              '<input type="text" class="fulfillment-addr-input" placeholder="Delivery address…">' +
+            '</div>' +
+            '<div class="fulfillment-datetime">' +
+              '<input type="date" class="fulfillment-date-input" title="Scheduled date">' +
+              '<input type="time" class="fulfillment-time-input" title="Scheduled time">' +
+            '</div>' +
+            '<button class="fulfillment-save-btn">Save fulfillment</button>' +
+          '</div>' +
 
-          <div class="log-section">
-            <div class="panel-section-title">Interaction Log</div>
-            <div class="log-timeline"></div>
-            <div class="log-add">
-              <input type="date" class="log-date-input" value="${today()}">
-              <input type="text" class="log-note-input" placeholder="Add a note…">
-              <button class="log-save-btn">Save</button>
-            </div>
-          </div>
+          '<div class="log-section">' +
+            '<div class="panel-section-title">Interaction Log</div>' +
+            '<div class="log-timeline"></div>' +
+            '<div class="log-add">' +
+              '<input type="date" class="log-date-input" value="' + today() + '">' +
+              '<input type="text" class="log-note-input" placeholder="Add a note…">' +
+              '<button class="log-save-btn">Save</button>' +
+            '</div>' +
+          '</div>' +
 
-        </div>
-      </div>
-    </td>
-  </tr>`;
+        '</div>' +
+      '</div>' +
+    '</td>' +
+  '</tr>';
 }
 
 function attachRowEvents(tr) {
@@ -961,21 +961,22 @@ async function addAttendee() {
   attendees.push(data);
   leadsBody.insertAdjacentHTML('beforeend', rowHtml(data));
   leadsBody.insertAdjacentHTML('beforeend', logRowHtml(data.id));
-  const tr = leadsBody.querySelector(`tr.data-row[data-id="${data.id}"]`);
+  const tr = leadsBody.querySelector('tr.data-row[data-id="' + data.id + '"]');
   attachRowEvents(tr);
-  tr.querySelector('[data-field="company"]')?.click();
+  tr.querySelector('[data-field="company"]') && tr.querySelector('[data-field="company"]').click();
   showToast('Row added');
 }
 
 async function deleteAttendee(tr) {
   const id  = tr.dataset.id;
   const att = attendees.find(a => a.id === id);
-  const label = att?.company || att?.contact_name || 'this attendee';
-  if (!confirm(`Delete ${label}?`)) return;
+  const label = (att && (att.company || att.contact_name)) || 'this attendee';
+  if (!confirm('Delete ' + label + '?')) return;
   const { error } = await sb.from('attendees').delete().eq('id', id);
   if (error) { console.error(error); return; }
   attendees = attendees.filter(a => a.id !== id);
-  leadsBody.querySelector(`tr.log-row[data-for="${id}"]`)?.remove();
+  const logRow = leadsBody.querySelector('tr.log-row[data-for="' + id + '"]');
+  if (logRow) logRow.remove();
   tr.remove();
   delete interactionCache[id];
   updateStats();
@@ -985,7 +986,7 @@ async function deleteAttendee(tr) {
 // ── Interaction log ────────────────────────────────────────────────────────────
 async function toggleLog(tr, attendeeId) {
   const btn    = tr.querySelector('.expand-btn');
-  const logRow = leadsBody.querySelector(`tr.log-row[data-for="${attendeeId}"]`);
+  const logRow = leadsBody.querySelector('tr.log-row[data-for="' + attendeeId + '"]');
   if (!logRow) return;
 
   const isOpen = logRow.classList.contains('open');
@@ -1011,7 +1012,7 @@ async function loadInteractions(attendeeId) {
 }
 
 function renderLogPanel(attendeeId) {
-  const panel    = leadsBody.querySelector(`.log-panel[data-id="${attendeeId}"]`);
+  const panel    = leadsBody.querySelector('.log-panel[data-id="' + attendeeId + '"]');
   if (!panel) return;
   const timeline = panel.querySelector('.log-timeline');
   const entries  = interactionCache[attendeeId] || [];
@@ -1019,16 +1020,16 @@ function renderLogPanel(attendeeId) {
     timeline.innerHTML = '<div class="log-empty">No interactions yet.</div>';
   } else {
     timeline.innerHTML = entries.map(e =>
-      `<div class="log-entry">
-        <span class="log-entry-date">${esc(fmtDate(e.date))}</span>
-        <span class="log-entry-note">${esc(e.note)}</span>
-      </div>`
+      '<div class="log-entry">' +
+        '<span class="log-entry-date">' + esc(fmtDate(e.date)) + '</span>' +
+        '<span class="log-entry-note">' + esc(e.note) + '</span>' +
+      '</div>'
     ).join('');
   }
 }
 
 function wireLogPanel(attendeeId) {
-  const panel   = leadsBody.querySelector(`.log-panel[data-id="${attendeeId}"]`);
+  const panel   = leadsBody.querySelector('.log-panel[data-id="' + attendeeId + '"]');
   if (!panel) return;
   const saveBtn = panel.querySelector('.log-save-btn');
   if (saveBtn.dataset.wired) return;
@@ -1042,7 +1043,7 @@ function wireLogPanel(attendeeId) {
     const payload = { attendee_id: attendeeId, date: dateInput.value || today(), note };
     const { data, error } = await sb.from('interactions').insert(payload).select().single();
     if (error) { console.error(error); return; }
-    interactionCache[attendeeId] = [data, ...(interactionCache[attendeeId] || [])];
+    interactionCache[attendeeId] = [data].concat(interactionCache[attendeeId] || []);
     noteInput.value = '';
     dateInput.value = today();
     renderLogPanel(attendeeId);
@@ -1055,7 +1056,7 @@ function wireLogPanel(attendeeId) {
 }
 
 function wireFulfillmentPanel(attendeeId) {
-  const panel = leadsBody.querySelector(`.log-panel[data-id="${attendeeId}"]`);
+  const panel = leadsBody.querySelector('.log-panel[data-id="' + attendeeId + '"]');
   if (!panel || panel.dataset.fulfillmentWired) return;
   panel.dataset.fulfillmentWired = '1';
 
@@ -1067,14 +1068,14 @@ function wireFulfillmentPanel(attendeeId) {
   const timeInput   = panel.querySelector('.fulfillment-time-input');
   const saveBtn     = panel.querySelector('.fulfillment-save-btn');
 
-  if (att?.fulfillment_type) {
-    const radio = panel.querySelector(`input[value="${att.fulfillment_type}"]`);
+  if (att && att.fulfillment_type) {
+    const radio = panel.querySelector('input[value="' + att.fulfillment_type + '"]');
     if (radio) radio.checked = true;
     if (att.fulfillment_type === 'delivery') addrSection.style.display = '';
   }
-  if (att?.delivery_address)  addrInput.value = att.delivery_address;
-  if (att?.scheduled_date)    dateInput.value = att.scheduled_date;
-  if (att?.scheduled_time)    timeInput.value = att.scheduled_time;
+  if (att && att.delivery_address)  addrInput.value = att.delivery_address;
+  if (att && att.scheduled_date)    dateInput.value = att.scheduled_date;
+  if (att && att.scheduled_time)    timeInput.value = att.scheduled_time;
 
   typeInputs.forEach(inp => {
     inp.addEventListener('change', () => {
@@ -1083,7 +1084,8 @@ function wireFulfillmentPanel(attendeeId) {
   });
 
   saveBtn.addEventListener('click', async () => {
-    const fulfillment_type  = [...typeInputs].find(i => i.checked)?.value || null;
+    const checkedType = Array.from(typeInputs).find(i => i.checked);
+    const fulfillment_type  = checkedType ? checkedType.value : null;
     const delivery_address  = addrInput.value.trim() || null;
     const scheduled_date    = dateInput.value || null;
     const scheduled_time    = timeInput.value || null;
@@ -1092,10 +1094,10 @@ function wireFulfillmentPanel(attendeeId) {
       .eq('id', attendeeId);
     if (!error) {
       if (att) {
-        att.fulfillment_type  = fulfillment_type;
-        att.delivery_address  = delivery_address;
-        att.scheduled_date    = scheduled_date;
-        att.scheduled_time    = scheduled_time;
+        att.fulfillment_type = fulfillment_type;
+        att.delivery_address = delivery_address;
+        att.scheduled_date   = scheduled_date;
+        att.scheduled_time   = scheduled_time;
       }
       showToast('Fulfillment saved');
     }
@@ -1123,7 +1125,7 @@ function exportPDF() {
   const wonVal     = attendees.filter(a => a.status === 'Ordered and Paid').reduce((s,a) => s + (a.est_value || 0), 0);
   const closingVal = attendees.filter(a => a.status === 'Ordered and Unpaid').reduce((s,a) => s + (a.est_value || 0), 0);
   doc.setTextColor(29, 29, 31);
-  doc.text(`Total Won: ${fmtCurrency(wonVal) || '$0'}     Total Closing: ${fmtCurrency(closingVal) || '$0'}`, 14, 31);
+  doc.text('Total Won: ' + (fmtCurrency(wonVal) || '$0') + '     Total Closing: ' + (fmtCurrency(closingVal) || '$0'), 14, 31);
 
   const head = [['★', 'Company', 'Contact', 'Source', 'Phone', 'Status', 'Qty', 'Value', 'Next Action', 'Due Date', 'Notes']];
   const body = sortedAttendees().map(a => [
@@ -1161,7 +1163,7 @@ function exportPDF() {
   });
 
   const safeName = currentExpo.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-  doc.save(`${safeName}_leads.pdf`);
+  doc.save(safeName + '_leads.pdf');
   showToast('PDF exported');
 }
 
