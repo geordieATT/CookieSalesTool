@@ -125,9 +125,24 @@ body {
 
 /* ── Main ── */
 .main { padding: 28px; }
-.expo-header { margin-bottom: 14px; display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.expo-header { margin-bottom: 14px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .expo-title { font-size: 22px; font-weight: 700; letter-spacing: -0.03em; color: #1d1d1f; }
 .expo-meta { font-size: 13px; color: #6e6e73; }
+.btn-delete-event {
+  background: none;
+  border: 1px solid rgba(255,59,48,0.25);
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  color: #d70015;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+  white-space: nowrap;
+  margin-left: auto;
+}
+.btn-delete-event:hover { background: rgba(255,59,48,0.08); border-color: rgba(255,59,48,0.5); }
 
 /* ── Stats bar ── */
 .stats-bar { display: flex; gap: 14px; margin-bottom: 18px; flex-wrap: wrap; }
@@ -686,6 +701,7 @@ td select.cell-edit {
     <div class="expo-header">
       <div class="expo-title" id="expo-title"></div>
       <div class="expo-meta" id="expo-meta"></div>
+      <button class="btn-delete-event" id="btn-delete-event">Delete event</button>
     </div>
 
     <div class="stats-bar">
@@ -815,6 +831,7 @@ const expoTitle        = document.getElementById('expo-title');
 const expoMeta         = document.getElementById('expo-meta');
 const leadsBody        = document.getElementById('leads-body');
 const btnAddAttendee   = document.getElementById('btn-add-attendee');
+const btnDeleteEvent   = document.getElementById('btn-delete-event');
 const toast            = document.getElementById('toast');
 const statWon          = document.getElementById('stat-won');
 const statClosing      = document.getElementById('stat-closing');
@@ -1323,6 +1340,25 @@ function exportPDF() {
   doc.save(currentExpo.name.replace(/[^a-z0-9]/gi,'_').toLowerCase()+'_leads.pdf');
   showToast('PDF exported');
 }
+
+// ── Delete event ──────────────────────────────────────────────────────────────
+async function deleteEvent() {
+  if (!currentExpo) return;
+  const name = currentExpo.name;
+  if (!confirm('Delete event "' + name + '" and all its attendees? This cannot be undone.')) return;
+  const { error } = await sb.from('expos').delete().eq('id', currentExpo.id);
+  if (error) { console.error(error); return; }
+  expos = expos.filter(e => e.id !== currentExpo.id);
+  attendees = [];
+  Object.keys(interactionCache).forEach(k => delete interactionCache[k]);
+  Object.keys(messageLogCache).forEach(k => delete messageLogCache[k]);
+  renderExpoSelect();
+  currentExpo = null;
+  noExpo.style.display = '';
+  expoView.style.display = 'none';
+  showToast('"' + name + '" deleted');
+}
+btnDeleteEvent.addEventListener('click', deleteEvent);
 
 // ── Sort headers ───────────────────────────────────────────────────────────────
 document.querySelectorAll('thead th.sortable').forEach(th=>{
