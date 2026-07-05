@@ -473,6 +473,47 @@ td select.cell-edit {
 /* ── No event ── */
 .no-expo { padding: 60px 0; color: #6e6e73; font-size: 15px; font-weight: 400; letter-spacing: -0.01em; }
 
+/* ── AI Chat Import ── */
+.btn.import-btn { background: rgba(94,92,230,0.1); color: #5856d6; border-color: rgba(94,92,230,0.3); }
+.btn.import-btn:hover { background: rgba(94,92,230,0.18); }
+.settings-icon-btn {
+  background: none;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 8px;
+  padding: 5px 9px;
+  font-size: 16px;
+  cursor: pointer;
+  color: #6e6e73;
+  line-height: 1;
+  font-family: inherit;
+  transition: background .15s, color .15s;
+}
+.settings-icon-btn:hover { background: rgba(0,0,0,0.06); color: #1d1d1f; }
+.import-chat-textarea {
+  width: 100%;
+  border: 1px solid rgba(0,0,0,0.15);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #1d1d1f;
+  background: #fff;
+  resize: vertical;
+  min-height: 150px;
+  max-height: 280px;
+  line-height: 1.55;
+  transition: border-color .15s, box-shadow .15s;
+  display: block;
+  margin-bottom: 10px;
+}
+.import-chat-textarea:focus { outline: none; border-color: #0071e3; box-shadow: 0 0 0 2px rgba(0,113,227,0.2); }
+.ip-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: #6e6e73; margin-bottom: 4px; }
+.ip-input { width: 100%; border: 1px solid rgba(0,0,0,0.15); border-radius: 7px; padding: 6px 10px; font-size: 13px; font-family: inherit; color: #1d1d1f; background: #fff; transition: border-color .15s, box-shadow .15s; }
+.ip-input:focus { outline: none; border-color: #0071e3; box-shadow: 0 0 0 2px rgba(0,113,227,0.2); }
+.import-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.import-grid-full { grid-column: span 2; }
+@media (max-width: 520px) { .import-grid { grid-template-columns: 1fr; } .import-grid-full { grid-column: span 1; } }
+
 /* ────────────────────────────────────────────────────────
    Message Log Modal
    ──────────────────────────────────────────────────────── */
@@ -684,6 +725,8 @@ td select.cell-edit {
   </select>
   <button class="btn primary" id="btn-add-expo">+ Add event</button>
   <div class="topbar-spacer"></div>
+  <button class="settings-icon-btn" id="btn-settings" title="API Settings">&#9881;</button>
+  <button class="btn import-btn" id="btn-import-chat">Import from Chat</button>
   <button class="btn export-btn" id="btn-export-pdf">Export PDF</button>
 </div>
 
@@ -785,6 +828,102 @@ td select.cell-edit {
           </div>
           <textarea class="logs-content-textarea" id="msg-log-content" placeholder="Paste chat history here…"></textarea>
           <button class="logs-save-btn" id="msg-log-save">Save Log</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Settings Modal ── -->
+<div class="modal-overlay" id="settings-overlay">
+  <div class="modal" style="max-width:460px;height:auto;max-height:80vh;overflow:visible">
+    <div class="modal-header">
+      <div class="modal-title-wrap">
+        <div class="modal-title">Settings</div>
+        <div class="modal-subtitle">Stored locally in your browser</div>
+      </div>
+      <button class="modal-close-btn" id="settings-close">&#x2715;</button>
+    </div>
+    <div style="padding:20px 22px 24px;display:flex;flex-direction:column;gap:6px">
+      <div class="ip-label">Claude API Key</div>
+      <input type="password" id="settings-api-key" class="panel-input" style="width:100%;font-family:monospace;font-size:12px" placeholder="sk-ant-…" autocomplete="off">
+      <div style="font-size:11px;color:#aeaeb2;line-height:1.5">Used for AI chat import. Get yours at <strong>console.anthropic.com</strong></div>
+      <div style="margin-top:10px"><button class="btn primary" id="settings-save">Save</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── AI Import Modal ── -->
+<div class="modal-overlay" id="import-overlay">
+  <div class="modal" style="max-width:700px;height:auto;max-height:92vh;overflow-y:auto">
+    <div class="modal-header" style="position:sticky;top:0;background:#fff;z-index:1;border-radius:18px 18px 0 0">
+      <div class="modal-title-wrap">
+        <div class="modal-title">Import Lead from Chat</div>
+        <div class="modal-subtitle">Paste an Instagram DM (or any chat) — AI will extract the lead details</div>
+      </div>
+      <button class="modal-close-btn" id="import-close">&#x2715;</button>
+    </div>
+    <div style="padding:16px 22px 8px">
+      <div class="logs-add-header">Paste chat history</div>
+      <textarea id="import-chat-input" class="import-chat-textarea" placeholder="Paste your Instagram DM or chat conversation here…"></textarea>
+      <button class="btn primary" id="import-extract-btn">Extract Lead Info</button>
+    </div>
+    <div id="import-preview" style="display:none;padding:4px 22px 22px">
+      <div style="border-top:1px solid rgba(0,0,0,0.08);padding-top:16px;margin-top:8px">
+        <div class="logs-add-header" style="margin-bottom:14px">Extracted lead — review &amp; edit before saving</div>
+        <div class="import-grid">
+          <div>
+            <div class="ip-label">Contact name</div>
+            <input type="text" id="ip-contact" class="ip-input" placeholder="Name">
+          </div>
+          <div>
+            <div class="ip-label">Phone</div>
+            <input type="text" id="ip-phone" class="ip-input" placeholder="Phone number">
+          </div>
+          <div>
+            <div class="ip-label">Source</div>
+            <select id="ip-source" class="ip-input">
+              <option value="">— Select source —</option>
+              <option value="Instagram">Instagram</option>
+              <option value="Facebook">Facebook</option>
+              <option value="Through mum">Through mum</option>
+              <option value="Email">Email</option>
+              <option value="Phone">Phone</option>
+              <option value="Messenger">Messenger</option>
+            </select>
+          </div>
+          <div>
+            <div class="ip-label">Fulfillment</div>
+            <select id="ip-fulfillment" class="ip-input">
+              <option value="">— Unknown —</option>
+              <option value="pickup">Pickup</option>
+              <option value="delivery">Delivery</option>
+            </select>
+          </div>
+          <div>
+            <div class="ip-label">Qty (cookies)</div>
+            <input type="number" id="ip-qty" class="ip-input" placeholder="0" min="0">
+          </div>
+          <div>
+            <div class="ip-label">Est. value ($)</div>
+            <input type="number" id="ip-value" class="ip-input" step="0.01" placeholder="0.00" min="0">
+          </div>
+          <div id="ip-address-row" style="display:none" class="import-grid-full">
+            <div class="ip-label">Delivery address</div>
+            <input type="text" id="ip-address" class="ip-input" placeholder="Delivery address…">
+          </div>
+          <div>
+            <div class="ip-label">Next action</div>
+            <input type="text" id="ip-next-action" class="ip-input" placeholder="e.g. Send quote">
+          </div>
+          <div>
+            <div class="ip-label">Notes</div>
+            <input type="text" id="ip-notes" class="ip-input" placeholder="Brief notes…">
+          </div>
+        </div>
+        <div style="margin-top:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <button class="btn primary" id="import-add-btn">Add as Lead</button>
+          <span style="font-size:11px;color:#aeaeb2">The raw chat will also be saved as a message log.</span>
         </div>
       </div>
     </div>
@@ -1314,7 +1453,13 @@ msgLogSave.addEventListener('click', async()=>{
 function closeMessagePanel(){msgModalOverlay.classList.remove('open');document.body.style.overflow='';currentMsgAttendeeId=null;}
 msgModalClose.addEventListener('click',closeMessagePanel);
 msgModalOverlay.addEventListener('click',e=>{if(e.target===msgModalOverlay)closeMessagePanel();});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&msgModalOverlay.classList.contains('open'))closeMessagePanel();});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    if(msgModalOverlay.classList.contains('open'))closeMessagePanel();
+    if(document.getElementById('settings-overlay').classList.contains('open'))document.getElementById('settings-overlay').classList.remove('open');
+    if(document.getElementById('import-overlay').classList.contains('open'))closeImportModal();
+  }
+});
 
 // ── PDF Export ─────────────────────────────────────────────────────────────────
 function exportPDF() {
@@ -1378,6 +1523,152 @@ expoNameInput.addEventListener('keydown',e=>{if(e.key==='Enter')createExpo();});
 expoSelect.addEventListener('change',()=>selectExpo(expoSelect.value));
 btnAddAttendee.addEventListener('click',addAttendee);
 btnExportPdf.addEventListener('click',exportPDF);
+
+// ── AI Chat Import ─────────────────────────────────────────────────────────────
+function getApiKey() { return localStorage.getItem('claude_api_key') || ''; }
+function setApiKey(k) { localStorage.setItem('claude_api_key', k); }
+
+// Settings modal
+document.getElementById('btn-settings').addEventListener('click', () => {
+  document.getElementById('settings-api-key').value = getApiKey();
+  document.getElementById('settings-overlay').classList.add('open');
+});
+document.getElementById('settings-save').addEventListener('click', () => {
+  setApiKey(document.getElementById('settings-api-key').value.trim());
+  document.getElementById('settings-overlay').classList.remove('open');
+  showToast('API key saved');
+});
+document.getElementById('settings-close').addEventListener('click', () => {
+  document.getElementById('settings-overlay').classList.remove('open');
+});
+document.getElementById('settings-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('settings-overlay'))
+    document.getElementById('settings-overlay').classList.remove('open');
+});
+
+// Import modal open/close
+function closeImportModal() {
+  document.getElementById('import-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.getElementById('btn-import-chat').addEventListener('click', () => {
+  if (!currentExpo) { showToast('Select an event first'); return; }
+  if (!getApiKey()) { showToast('Add your Claude API key in ⚙ Settings'); return; }
+  document.getElementById('import-chat-input').value = '';
+  document.getElementById('import-preview').style.display = 'none';
+  document.getElementById('import-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('import-chat-input').focus(), 50);
+});
+document.getElementById('import-close').addEventListener('click', closeImportModal);
+document.getElementById('import-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('import-overlay')) closeImportModal();
+});
+document.getElementById('ip-fulfillment').addEventListener('change', function() {
+  document.getElementById('ip-address-row').style.display = this.value === 'delivery' ? '' : 'none';
+});
+
+// Extract lead from chat
+document.getElementById('import-extract-btn').addEventListener('click', async () => {
+  const chat = document.getElementById('import-chat-input').value.trim();
+  if (!chat) { document.getElementById('import-chat-input').focus(); return; }
+  const key = getApiKey();
+  if (!key) { showToast('Add your Claude API key in ⚙ Settings'); return; }
+  const extractBtn = document.getElementById('import-extract-btn');
+  extractBtn.disabled = true; extractBtn.textContent = 'Extracting…';
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        messages: [{
+          role: 'user',
+          content: 'Extract lead information from this cookie sales chat. Return ONLY valid JSON (no markdown, no explanation) with these fields (use null for anything not mentioned):\n{"contact_name":null,"phone":null,"source":"Instagram","est_quantity":null,"est_value":null,"next_action":null,"notes":null,"fulfillment_type":null,"delivery_address":null}\n\nest_quantity = number of cookies they want to order\nest_value = total dollar amount they discussed\nfulfillment_type = "pickup" or "delivery" or null\nsource = where they contacted from (Instagram/Facebook/etc)\nnotes = brief 1-sentence summary\n\nChat:\n' + chat
+        }]
+      })
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error((err.error && err.error.message) || 'API error ' + resp.status);
+    }
+    const result = await resp.json();
+    const text = (result.content && result.content[0] && result.content[0].text) || '';
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('Could not parse AI response');
+    const data = JSON.parse(jsonMatch[0]);
+    populateImportPreview(data);
+    document.getElementById('import-preview').dataset.rawChat = chat;
+    document.getElementById('import-preview').style.display = '';
+  } catch(e) {
+    showToast('Error: ' + e.message);
+    console.error('AI import error:', e);
+  } finally {
+    extractBtn.disabled = false; extractBtn.textContent = 'Extract Lead Info';
+  }
+});
+
+function populateImportPreview(data) {
+  document.getElementById('ip-contact').value      = data.contact_name || '';
+  document.getElementById('ip-phone').value        = data.phone || '';
+  document.getElementById('ip-source').value       = data.source || 'Instagram';
+  document.getElementById('ip-qty').value          = data.est_quantity != null ? data.est_quantity : '';
+  document.getElementById('ip-value').value        = data.est_value != null ? data.est_value : '';
+  document.getElementById('ip-next-action').value  = data.next_action || '';
+  document.getElementById('ip-notes').value        = data.notes || '';
+  document.getElementById('ip-fulfillment').value  = data.fulfillment_type || '';
+  document.getElementById('ip-address').value      = data.delivery_address || '';
+  document.getElementById('ip-address-row').style.display = data.fulfillment_type === 'delivery' ? '' : 'none';
+}
+
+// Save extracted lead
+document.getElementById('import-add-btn').addEventListener('click', async () => {
+  if (!currentExpo) return;
+  const contact_name     = document.getElementById('ip-contact').value.trim() || null;
+  const phone            = document.getElementById('ip-phone').value.trim() || null;
+  const source           = document.getElementById('ip-source').value || null;
+  const qtyVal           = document.getElementById('ip-qty').value;
+  const est_quantity     = qtyVal === '' ? null : parseInt(qtyVal, 10);
+  const valVal           = document.getElementById('ip-value').value;
+  const est_value        = valVal === '' ? null : parseFloat(valVal);
+  const next_action      = document.getElementById('ip-next-action').value.trim() || null;
+  const notes            = document.getElementById('ip-notes').value.trim() || null;
+  const fulfillment_type = document.getElementById('ip-fulfillment').value || null;
+  const delivery_address = document.getElementById('ip-address').value.trim() || null;
+  const rawChat          = document.getElementById('import-preview').dataset.rawChat || '';
+  const addBtn = document.getElementById('import-add-btn');
+  addBtn.disabled = true; addBtn.textContent = 'Saving…';
+  try {
+    const { data: att, error } = await sb.from('attendees').insert({
+      expo_id: currentExpo.id, status: 'New', starred: false,
+      contact_name, phone, source, est_quantity, est_value,
+      next_action, notes, fulfillment_type, delivery_address
+    }).select().single();
+    if (error) throw error;
+    if (rawChat) {
+      await sb.from('message_logs').insert({ attendee_id: att.id, label: 'Imported chat', content: rawChat });
+    }
+    attendees.push(att);
+    leadsBody.insertAdjacentHTML('beforeend', rowHtml(att));
+    leadsBody.insertAdjacentHTML('beforeend', logRowHtml(att.id));
+    const newTr = leadsBody.querySelector('tr.data-row[data-id="'+att.id+'"]');
+    if (newTr) attachRowEvents(newTr);
+    updateStats();
+    closeImportModal();
+    showToast('Lead imported!');
+  } catch(e) {
+    console.error('Save error:', e);
+    showToast('Error saving lead');
+  } finally {
+    addBtn.disabled = false; addBtn.textContent = 'Add as Lead';
+  }
+});
 
 // ── Init ───────────────────────────────────────────────────────────────────────
 await loadExpos();
