@@ -473,6 +473,47 @@ td select.cell-edit {
 /* ── No event ── */
 .no-expo { padding: 60px 0; color: #6e6e73; font-size: 15px; font-weight: 400; letter-spacing: -0.01em; }
 
+/* ── Completed pill (gold shimmer) ── */
+@keyframes gold-shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.pill-Completed {
+  background: linear-gradient(90deg, #c8960c 0%, #fce561 25%, #f5c518 50%, #fce561 75%, #c8960c 100%);
+  background-size: 300% auto;
+  animation: gold-shimmer 2.2s linear infinite;
+  color: #3d2300;
+  border: 1px solid rgba(200,150,12,0.45);
+  box-shadow: 0 0 8px rgba(245,197,24,0.55), 0 0 2px rgba(200,150,12,0.4);
+  text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+}
+
+/* ── Completed row (strikethrough) ── */
+tbody tr.data-row.completed-row { opacity: 0.6; }
+tbody tr.data-row.completed-row .cell-inner { text-decoration: line-through; color: #aeaeb2; }
+
+/* ── Checkbox cells ── */
+.cb-cell { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 4px; }
+.cb-needs-message,
+.cb-is-completed { cursor: pointer; width: 15px; height: 15px; flex-shrink: 0; }
+.cb-needs-message { accent-color: #0071e3; }
+.cb-is-completed  { accent-color: #34c759; }
+.msg-note-box {
+  width: 88px;
+  border: 1px solid rgba(0,113,227,0.3);
+  border-radius: 5px;
+  padding: 4px 6px;
+  font-size: 11px;
+  font-family: inherit;
+  resize: none;
+  min-height: 44px;
+  background: #f0f7ff;
+  color: #1d1d1f;
+  line-height: 1.4;
+  transition: border-color .15s, box-shadow .15s;
+}
+.msg-note-box:focus { outline: none; border-color: #0071e3; box-shadow: 0 0 0 2px rgba(0,113,227,0.18); }
+
 /* ── AI Chat Import ── */
 .btn.import-btn { background: rgba(94,92,230,0.1); color: #5856d6; border-color: rgba(94,92,230,0.3); }
 .btn.import-btn:hover { background: rgba(94,92,230,0.18); }
@@ -714,6 +755,34 @@ td select.cell-edit {
   transition: background .15s;
 }
 .logs-save-btn:hover { background: #0077ed; }
+
+/* ── Status filter panel ── */
+.filter-panel {
+  display: none;
+  padding: 10px 28px;
+  background: #fff;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.filter-panel.open { display: flex; }
+.filter-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: #6e6e73; white-space: nowrap; margin-right: 2px; }
+.filter-pill {
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  transition: opacity .15s, filter .15s;
+}
+.filter-pill .pill { pointer-events: none; }
+.filter-pill.off { opacity: 0.28; filter: grayscale(0.7); }
+.filter-pill.off .pill { text-decoration: line-through; }
+.btn.filter-btn { background: rgba(0,0,0,0.06); color: #3a3a3c; border-color: transparent; }
+.btn.filter-btn:hover { background: rgba(0,0,0,0.1); }
+.btn.filter-btn.active { background: rgba(0,113,227,0.1); color: #0071e3; border-color: rgba(0,113,227,0.25); }
 </style>
 </head>
 <body>
@@ -724,10 +793,17 @@ td select.cell-edit {
     <option value="">— Select an event —</option>
   </select>
   <button class="btn primary" id="btn-add-expo">+ Add event</button>
+  <button class="btn filter-btn" id="btn-filter">Filter statuses</button>
   <div class="topbar-spacer"></div>
   <button class="settings-icon-btn" id="btn-settings" title="API Settings">&#9881;</button>
   <button class="btn import-btn" id="btn-import-chat">Import from Chat</button>
   <button class="btn export-btn" id="btn-export-pdf">Export PDF</button>
+</div>
+
+<div class="filter-panel" id="filter-panel">
+  <span class="filter-label">Show:</span>
+  <div id="filter-pills" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"></div>
+  <button class="btn" id="btn-filter-all" style="font-size:11px;padding:4px 12px;margin-left:4px">Show all</button>
 </div>
 
 <div class="add-expo-panel" id="add-expo-panel">
@@ -778,8 +854,9 @@ td select.cell-edit {
       <table id="leads-table">
         <thead>
           <tr>
+            <th class="th-icon" title="Need to message">&#9993;</th>
+            <th class="th-icon" title="All sorted / complete">&#10003;</th>
             <th class="th-icon sortable" data-sort="starred" title="Sort by starred">&#9733;<span class="sort-arrow"></span></th>
-            <th class="th-icon"></th>
             <th class="sortable" data-sort="company">Company<span class="sort-arrow"></span></th>
             <th class="sortable" data-sort="contact_name">Contact<span class="sort-arrow"></span></th>
             <th class="sortable" data-sort="source">Source<span class="sort-arrow"></span></th>
@@ -797,7 +874,7 @@ td select.cell-edit {
         <tbody id="leads-body"></tbody>
         <tfoot>
           <tr class="add-row">
-            <td colspan="14">
+            <td colspan="15">
               <button class="add-row-btn" id="btn-add-attendee">Add attendee</button>
             </td>
           </tr>
@@ -941,19 +1018,20 @@ const SUPABASE_URL = 'https://fbtqvkxnpzaocuzrrfrb.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_TXnkHlpcOU7HrCrkqNPhAg_BwpWzLN9';
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const STATUSES = ['New','In Contact','Waiting Reply','Ordered and Unpaid','Ordered and Paid','Ghosted','Lost'];
+const STATUSES = ['New','In Contact','Waiting Reply','Ordered and Unpaid','Ordered and Paid','Ghosted','Lost','Completed'];
 const PILL_CLASS = {
   'New':'pill-New','In Contact':'pill-InContact','Waiting Reply':'pill-WaitingReply',
   'Ordered and Unpaid':'pill-OrderedUnpaid','Ordered and Paid':'pill-OrderedPaid',
-  'Ghosted':'pill-Ghosted','Lost':'pill-Lost',
+  'Ghosted':'pill-Ghosted','Lost':'pill-Lost','Completed':'pill-Completed',
 };
 const SOURCES = ['Instagram','Facebook','Through mum','Email','Phone','Messenger'];
-const NEXT_ACTION_PRESETS = ['Waiting for payment confirmation','Arrange delivery','Arrange pickup'];
+const NEXT_ACTION_OPTIONS = ['Arranging pick up time','Pickup confirmed','Arranging delivery','Delivery date confirmed'];
 
 // ── State ──────────────────────────────────────────────────────────────────────
 let expos = [], currentExpo = null, attendees = [];
 const interactionCache = {}, messageLogCache = {};
 let sortField = null, sortDir = 'asc', currentMsgAttendeeId = null;
+const hiddenStatuses = new Set();
 
 // ── DOM refs ───────────────────────────────────────────────────────────────────
 const expoSelect       = document.getElementById('expo-select');
@@ -998,6 +1076,64 @@ function showToast(msg = 'Saved') {
   toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
 }
 
+// ── Status filter ──────────────────────────────────────────────────────────────
+const filterPanel  = document.getElementById('filter-panel');
+const filterPills  = document.getElementById('filter-pills');
+const btnFilter    = document.getElementById('btn-filter');
+const btnFilterAll = document.getElementById('btn-filter-all');
+
+function renderFilterPills() {
+  filterPills.innerHTML = '';
+  STATUSES.forEach(s => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'filter-pill' + (hiddenStatuses.has(s) ? ' off' : '');
+    btn.title = hiddenStatuses.has(s) ? 'Click to show ' + s : 'Click to hide ' + s;
+    btn.innerHTML = '<span class="pill ' + (PILL_CLASS[s]||'pill-New') + '">' + esc(s) + '</span>';
+    btn.addEventListener('click', () => {
+      if (hiddenStatuses.has(s)) hiddenStatuses.delete(s);
+      else hiddenStatuses.add(s);
+      renderFilterPills();
+      applyFilter();
+      updateFilterBtn();
+    });
+    filterPills.appendChild(btn);
+  });
+}
+
+function applyFilter() {
+  leadsBody.querySelectorAll('tr.data-row').forEach(tr => {
+    const id = tr.dataset.id;
+    const att = attendees.find(a => a.id === id);
+    const hide = att && hiddenStatuses.has(att.status || 'New');
+    tr.style.display = hide ? 'none' : '';
+    const logRow = leadsBody.querySelector('tr.log-row[data-for="'+id+'"]');
+    if (logRow) {
+      if (hide) logRow.style.display = 'none';
+      else logRow.style.display = logRow.classList.contains('open') ? '' : 'none';
+    }
+  });
+}
+
+function updateFilterBtn() {
+  btnFilter.classList.toggle('active', hiddenStatuses.size > 0);
+  btnFilter.textContent = hiddenStatuses.size > 0
+    ? 'Filter (' + hiddenStatuses.size + ' hidden)'
+    : 'Filter statuses';
+}
+
+btnFilter.addEventListener('click', () => {
+  filterPanel.classList.toggle('open');
+  if (filterPanel.classList.contains('open')) renderFilterPills();
+});
+
+btnFilterAll.addEventListener('click', () => {
+  hiddenStatuses.clear();
+  renderFilterPills();
+  applyFilter();
+  updateFilterBtn();
+});
+
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function esc(s) {
   if (s == null) return '';
@@ -1031,12 +1167,12 @@ function dueDateHtml(d) {
 
 // ── Stats ──────────────────────────────────────────────────────────────────────
 function updateStats() {
-  const ACTIVE = ['New','In Contact','Waiting Reply','Ordered and Unpaid','Ordered and Paid'];
-  const won          = attendees.filter(a=>a.status==='Ordered and Paid').reduce((s,a)=>s+(a.est_value||0),0);
+  const ACTIVE = ['New','In Contact','Waiting Reply','Ordered and Unpaid','Ordered and Paid','Completed'];
+  const won          = attendees.filter(a=>a.status==='Ordered and Paid'||a.status==='Completed').reduce((s,a)=>s+(a.est_value||0),0);
   const closing      = attendees.filter(a=>a.status==='Ordered and Unpaid').reduce((s,a)=>s+(a.est_value||0),0);
   const pipeline     = attendees.filter(a=>ACTIVE.includes(a.status)).reduce((s,a)=>s+(a.est_value||0),0);
-  const cookiesOrdered = attendees.filter(a=>a.status==='Ordered and Paid'||a.status==='Ordered and Unpaid').reduce((s,a)=>s+(a.est_quantity||0),0);
-  const cookiesWon   = attendees.filter(a=>a.status==='Ordered and Paid').reduce((s,a)=>s+(a.est_quantity||0),0);
+  const cookiesOrdered = attendees.filter(a=>a.status==='Ordered and Paid'||a.status==='Ordered and Unpaid'||a.status==='Completed').reduce((s,a)=>s+(a.est_quantity||0),0);
+  const cookiesWon   = attendees.filter(a=>a.status==='Ordered and Paid'||a.status==='Completed').reduce((s,a)=>s+(a.est_quantity||0),0);
   statWon.textContent        = won        ? fmtCurrency(won)      : '$0';
   statClosing.textContent    = closing    ? fmtCurrency(closing)  : '$0';
   statPipeline.textContent   = pipeline   ? fmtCurrency(pipeline) : '$0';
@@ -1124,17 +1260,24 @@ function renderTable() {
   });
   leadsBody.querySelectorAll('tr.data-row').forEach(tr => attachRowEvents(tr));
   updateSortHeaders();
+  if (hiddenStatuses.size > 0) applyFilter();
 }
 
 function rowHtml(a) {
-  return '<tr class="data-row'+(a.starred?' starred-row':'')+'" data-id="'+esc(a.id)+'">' +
-    '<td style="text-align:center;padding:0 4px">' +
-      '<button class="star-btn'+(a.starred?' starred':'')+'" title="'+(a.starred?'Unstar':'Star')+'">'+(a.starred?'&#9733;':'&#9734;')+'</button>' +
+  const needsMsg = !!a.needs_message;
+  const isComplete = !!a.is_completed;
+  return '<tr class="data-row'+(a.starred?' starred-row':'')+(isComplete?' completed-row':'')+'" data-id="'+esc(a.id)+'">' +
+    '<td style="padding:0 4px;vertical-align:top">' +
+      '<div class="cb-cell">' +
+        '<input type="checkbox" class="cb-needs-message" title="Need to message them"'+(needsMsg?' checked':'')+' style="margin-top:2px">' +
+        '<textarea class="msg-note-box" placeholder="What to say…" style="'+(needsMsg?'':'display:none')+'">'+esc(a.message_note||'')+'</textarea>' +
+      '</div>' +
+    '</td>' +
+    '<td style="text-align:center;padding:0 4px;vertical-align:middle">' +
+      '<input type="checkbox" class="cb-is-completed" title="All sorted — mark complete"'+(isComplete?' checked':'')+' style="margin-top:1px">' +
     '</td>' +
     '<td style="text-align:center;padding:0 4px">' +
-      '<button class="expand-btn" title="Fulfillment &amp; log">' +
-        '<svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3,2 7,5 3,8"/></svg>' +
-      '</button>' +
+      '<button class="star-btn'+(a.starred?' starred':'')+'" title="'+(a.starred?'Unstar':'Star')+'">'+(a.starred?'&#9733;':'&#9734;')+'</button>' +
     '</td>' +
     '<td><span class="cell-inner" data-field="company">'+esc(a.company)+'</span></td>' +
     '<td><span class="cell-inner" data-field="contact_name">'+esc(a.contact_name)+'</span></td>' +
@@ -1159,7 +1302,7 @@ function rowHtml(a) {
 
 function logRowHtml(id) {
   return '<tr class="log-row" data-for="'+esc(id)+'">' +
-    '<td colspan="14"><div class="log-panel" data-id="'+esc(id)+'">' +
+    '<td colspan="15"><div class="log-panel" data-id="'+esc(id)+'">' +
       '<div class="log-panel-inner">' +
         '<div class="fulfillment-section">' +
           '<div class="panel-section-title">Fulfillment</div>' +
@@ -1190,11 +1333,41 @@ function logRowHtml(id) {
 
 function attachRowEvents(tr) {
   const id = tr.dataset.id;
+  const att = attendees.find(a=>a.id===id);
   tr.querySelectorAll('.cell-inner').forEach(cell => cell.addEventListener('click', ()=>startEdit(tr,cell)));
   tr.querySelector('.del-btn').addEventListener('click', ()=>deleteAttendee(tr));
-  tr.querySelector('.expand-btn').addEventListener('click', ()=>toggleLog(tr,id));
   tr.querySelector('.star-btn').addEventListener('click', ()=>toggleStar(tr,id));
   tr.querySelector('.chat-log-btn').addEventListener('click', ()=>openMessagePanel(id));
+
+  const cbNeeds = tr.querySelector('.cb-needs-message');
+  const noteBox = tr.querySelector('.msg-note-box');
+  if (cbNeeds && att) {
+    cbNeeds.addEventListener('change', async () => {
+      const checked = cbNeeds.checked;
+      if (noteBox) noteBox.style.display = checked ? '' : 'none';
+      att.needs_message = checked;
+      await sb.from('attendees').update({needs_message: checked}).eq('id', id);
+    });
+    if (noteBox) {
+      noteBox.addEventListener('change', async () => {
+        const note = noteBox.value.trim() || null;
+        att.message_note = note;
+        await sb.from('attendees').update({message_note: note}).eq('id', id);
+        showToast('Note saved');
+      });
+    }
+  }
+
+  const cbCompleted = tr.querySelector('.cb-is-completed');
+  if (cbCompleted && att) {
+    cbCompleted.addEventListener('change', async () => {
+      const checked = cbCompleted.checked;
+      att.is_completed = checked;
+      tr.classList.toggle('completed-row', checked);
+      await sb.from('attendees').update({is_completed: checked}).eq('id', id);
+      updateStats();
+    });
+  }
 }
 
 // ── Starring ───────────────────────────────────────────────────────────────────
@@ -1233,16 +1406,12 @@ function startEdit(tr, cell) {
     control.addEventListener('keydown',e=>{if(e.key==='Escape')revertCell(tr,cell,att);});
 
   } else if (field==='next_action') {
-    const wrapper=document.createElement('div'), picks=document.createElement('div');
-    picks.className='quick-picks';
-    NEXT_ACTION_PRESETS.forEach(preset=>{
-      const btn=document.createElement('button');btn.className='quick-pick-btn';btn.type='button';btn.textContent=preset;
-      btn.addEventListener('mousedown',e=>e.preventDefault());
-      btn.addEventListener('click',()=>{control.value=preset;control.focus();});
-      picks.appendChild(btn);
-    });
-    control=document.createElement('textarea');control.className='cell-edit';control.rows=2;control.value=att[field]||'';
-    wrapper.appendChild(picks);wrapper.appendChild(control);cell.innerHTML='';cell.appendChild(wrapper);control.focus();
+    control=document.createElement('select'); control.className='cell-edit';
+    const emp=document.createElement('option');emp.value='';emp.textContent='— Select —';if(!att.next_action)emp.selected=true;control.appendChild(emp);
+    NEXT_ACTION_OPTIONS.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;if(s===att[field])o.selected=true;control.appendChild(o);});
+    cell.innerHTML=''; cell.appendChild(control); control.focus();
+    control.addEventListener('change',()=>control.blur());
+    control.addEventListener('keydown',e=>{if(e.key==='Escape')revertCell(tr,cell,att);});
 
   } else if (field==='notes') {
     control=document.createElement('textarea');control.className='cell-edit';control.rows=2;control.value=att[field]||'';
@@ -1275,7 +1444,7 @@ function startEdit(tr, cell) {
   };
   control.addEventListener('blur',commit);
   control.addEventListener('keydown',e=>{
-    if(e.key==='Enter'&&field!=='notes'&&field!=='next_action'){e.preventDefault();control.blur();}
+    if(e.key==='Enter'&&field!=='notes'){e.preventDefault();control.blur();}
     if(e.key==='Escape')revertCell(tr,cell,att);
   });
 }
@@ -1462,8 +1631,13 @@ document.addEventListener('keydown',e=>{
 });
 
 // ── PDF Export ─────────────────────────────────────────────────────────────────
-function exportPDF() {
+async function exportPDF() {
   if(!currentExpo){showToast('Select an event first');return;}
+  btnExportPdf.disabled=true; btnExportPdf.textContent='Loading…';
+  const {data,error}=await sb.from('attendees').select('*').eq('expo_id',currentExpo.id).order('created_at',{ascending:true});
+  btnExportPdf.disabled=false; btnExportPdf.textContent='Export PDF';
+  if(error){console.error(error);showToast('Error loading data');return;}
+  attendees=data||[]; renderTable(); updateStats();
   const {jsPDF}=window.jspdf, doc=new jsPDF({orientation:'landscape',unit:'mm'});
   doc.setFontSize(18);doc.setFont(undefined,'bold');doc.text(currentExpo.name,14,18);
   doc.setFontSize(10);doc.setFont(undefined,'normal');doc.setTextColor(110,110,115);
