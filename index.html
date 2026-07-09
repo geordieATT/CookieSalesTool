@@ -784,50 +784,25 @@ tbody tr.data-row.completed-row .cell-inner { text-decoration: line-through; col
 .btn.filter-btn:hover { background: rgba(0,0,0,0.1); }
 .btn.filter-btn.active { background: rgba(0,113,227,0.1); color: #0071e3; border-color: rgba(0,113,227,0.25); }
 
-/* ── Calendar modal ── */
-.cal-modal {
-  background: #fff;
-  border-radius: 18px;
-  width: 100%;
-  max-width: 900px;
-  max-height: 88vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  box-shadow: 0 24px 80px rgba(0,0,0,0.28), 0 0 0 1px rgba(0,0,0,0.06);
-  animation: modal-in .18s ease;
-}
-.cal-header {
-  display: flex;
-  align-items: flex-start;
-  padding: 16px 22px;
-  border-bottom: 1px solid rgba(0,0,0,0.08);
-  gap: 12px;
-  flex-shrink: 0;
-}
-.cal-title { font-size: 16px; font-weight: 600; letter-spacing: -0.02em; color: #1d1d1f; }
-.cal-hint  { font-size: 12px; color: #6e6e73; margin-top: 2px; line-height: 1.5; }
+/* ── Calendar full-page view ── */
 .cal-legend {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  padding: 10px 22px;
+  padding: 14px 18px;
   border-bottom: 1px solid rgba(0,0,0,0.07);
-  background: #fafafa;
-  flex-shrink: 0;
 }
 .cal-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #3a3a3c; font-weight: 500; }
 .cal-legend-dot  { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
 .cal-body {
-  overflow-y: auto;
-  padding: 20px 22px 28px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 28px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  padding: 20px 18px 28px;
   align-items: start;
 }
-@media (max-width: 680px) { .cal-body { grid-template-columns: repeat(2,1fr); } }
-@media (max-width: 420px) { .cal-body { grid-template-columns: 1fr; } }
+@media (max-width: 860px) { .cal-body { grid-template-columns: repeat(3,1fr); } }
+@media (max-width: 600px) { .cal-body { grid-template-columns: repeat(2,1fr); } }
 .cal-month-title { font-size: 13px; font-weight: 700; color: #1d1d1f; margin-bottom: 8px; letter-spacing: -0.01em; }
 .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
 .cal-dow { text-align: center; font-size: 9px; font-weight: 700; color: #aeaeb2; padding: 3px 0 6px; text-transform: uppercase; letter-spacing: .04em; }
@@ -982,6 +957,37 @@ tbody tr.data-row.completed-row .cell-inner { text-decoration: line-through; col
       </table>
     </div></div>
   </div>
+
+  <!-- ── Calendar view ── -->
+  <div id="cal-view" style="display:none">
+    <div class="expo-header">
+      <div class="expo-title">Event Calendar</div>
+      <div class="expo-meta">Click a coloured day to open its event &nbsp;&middot;&nbsp; Drag on empty days to assign a date range</div>
+      <button class="btn" id="cal-close" style="margin-left:auto;font-size:12px;padding:5px 14px">Close calendar</button>
+    </div>
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-label">Total Pipeline</div>
+        <div class="stat-value pipeline-color" id="cal-stat-pipeline">$0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Won</div>
+        <div class="stat-value won-color" id="cal-stat-won">$0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Avg Monthly Value</div>
+        <div class="stat-value" style="color:#5856d6" id="cal-stat-avg">$0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Events Scheduled</div>
+        <div class="stat-value leads-color" id="cal-stat-events">0</div>
+      </div>
+    </div>
+    <div class="table-card">
+      <div class="cal-legend" id="cal-legend"></div>
+      <div class="cal-body" id="cal-body"></div>
+    </div>
+  </div>
 </div>
 
 <!-- ── Message Log Modal ── -->
@@ -1104,21 +1110,6 @@ tbody tr.data-row.completed-row .cell-inner { text-decoration: line-through; col
         </div>
       </div>
     </div>
-  </div>
-</div>
-
-<!-- ── Calendar Modal ── -->
-<div class="modal-overlay" id="cal-overlay">
-  <div class="cal-modal">
-    <div class="cal-header">
-      <div style="flex:1;min-width:0">
-        <div class="cal-title">Event Calendar</div>
-        <div class="cal-hint">Click a coloured day to open its event &nbsp;&middot;&nbsp; Click &amp; drag on empty days to assign a date range to an event</div>
-      </div>
-      <button class="modal-close-btn" id="cal-close">&#x2715;</button>
-    </div>
-    <div class="cal-legend" id="cal-legend"></div>
-    <div class="cal-body" id="cal-body"></div>
   </div>
 </div>
 
@@ -1373,6 +1364,7 @@ function hideAddExpoPanel(){addExpoPanel.classList.remove('open');}
 // ── Expo selection ─────────────────────────────────────────────────────────────
 async function selectExpo(id) {
   currentExpo = expos.find(e=>e.id===id)||null;
+  calView.style.display='none';
   if (!currentExpo){noExpo.style.display='';expoView.style.display='none';return;}
   noExpo.style.display='none'; expoView.style.display='';
   expoTitle.textContent = currentExpo.name;
@@ -1983,7 +1975,7 @@ document.getElementById('import-add-btn').addEventListener('click', async () => 
 // ── Calendar ───────────────────────────────────────────────────────────────────
 const CAL_COLORS = ['#0071e3','#34c759','#e67e22','#5856d6','#ff2d55','#af52de','#17a589','#c0392b','#2980b9','#f39c12'];
 
-const calOverlay      = document.getElementById('cal-overlay');
+const calView         = document.getElementById('cal-view');
 const calBodyEl       = document.getElementById('cal-body');
 const calLegendEl     = document.getElementById('cal-legend');
 const calAssignOverlay= document.getElementById('cal-assign-overlay');
@@ -2067,7 +2059,7 @@ function initCalInteraction() {
   };
 }
 
-calOverlay.addEventListener('mouseup', () => {
+document.addEventListener('mouseup', () => {
   if (!calDragging) return;
   calDragging = false;
   if (calSelStart && calSelEnd) {
@@ -2104,21 +2096,37 @@ function openCalAssign(start, end) {
   calBodyEl.querySelectorAll('.cal-day').forEach(el => el.classList.remove('selecting','sel-anchor'));
 }
 
+async function loadCalStats() {
+  const ACTIVE = ['New','In Contact','Waiting Reply','Ordered and Unpaid','Ordered and Paid','Completed'];
+  const {data} = await sb.from('attendees').select('est_value, status');
+  if (!data) return;
+  const pipeline = data.filter(a => ACTIVE.includes(a.status)).reduce((s,a) => s+(a.est_value||0), 0);
+  const won      = data.filter(a => a.status==='Ordered and Paid'||a.status==='Completed').reduce((s,a) => s+(a.est_value||0), 0);
+  const eventsScheduled = expos.filter(e => e.date).length;
+  const avgMonthly = pipeline / 12;
+  document.getElementById('cal-stat-pipeline').textContent = fmtCurrency(pipeline) || '$0';
+  document.getElementById('cal-stat-won').textContent      = fmtCurrency(won)      || '$0';
+  document.getElementById('cal-stat-avg').textContent      = fmtCurrency(Math.round(avgMonthly)) || '$0';
+  document.getElementById('cal-stat-events').textContent   = eventsScheduled;
+}
+
 async function openCal() {
   await loadExpos();
-  calOverlay.classList.add('open');
-  document.body.style.overflow = 'hidden';
+  noExpo.style.display   = 'none';
+  expoView.style.display = 'none';
+  calView.style.display  = '';
+  await loadCalStats();
   renderCalendar();
 }
 function closeCal() {
-  calOverlay.classList.remove('open');
-  document.body.style.overflow = '';
+  calView.style.display = 'none';
+  if (currentExpo) expoView.style.display = '';
+  else noExpo.style.display = '';
   calDragging = false; calSelStart = null; calSelEnd = null;
 }
 
 btnCalendar.addEventListener('click', openCal);
 document.getElementById('cal-close').addEventListener('click', closeCal);
-calOverlay.addEventListener('click', e => { if (e.target === calOverlay) closeCal(); });
 
 document.getElementById('cal-assign-save').addEventListener('click', async () => {
   const start   = calAssignOverlay.dataset.start;
@@ -2157,7 +2165,7 @@ document.getElementById('cal-assign-cancel').addEventListener('click', () => {
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   if (calAssignOverlay.classList.contains('open')) calAssignOverlay.classList.remove('open');
-  else if (calOverlay.classList.contains('open')) closeCal();
+  else if (calView.style.display !== 'none') closeCal();
 });
 
 // ── Init ───────────────────────────────────────────────────────────────────────
