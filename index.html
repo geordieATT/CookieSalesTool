@@ -2098,15 +2098,26 @@ function openCalAssign(start, end) {
 
 async function loadCalStats() {
   const ACTIVE = ['New','In Contact','Waiting Reply','Ordered and Unpaid','Ordered and Paid','Completed'];
-  const {data} = await sb.from('attendees').select('est_value, status');
+  const todayStr = today();
+  // Only count leads from events that are today or in the future
+  const futureIds = expos
+    .filter(e => !e.date || (e.date_end || e.date) >= todayStr)
+    .map(e => e.id);
+  const eventsScheduled = expos.filter(e => e.date).length;
+  if (!futureIds.length) {
+    document.getElementById('cal-stat-pipeline').textContent = '$0';
+    document.getElementById('cal-stat-won').textContent      = '$0';
+    document.getElementById('cal-stat-avg').textContent      = '$0';
+    document.getElementById('cal-stat-events').textContent   = eventsScheduled;
+    return;
+  }
+  const {data} = await sb.from('attendees').select('est_value, status').in('expo_id', futureIds);
   if (!data) return;
   const pipeline = data.filter(a => ACTIVE.includes(a.status)).reduce((s,a) => s+(a.est_value||0), 0);
   const won      = data.filter(a => a.status==='Ordered and Paid'||a.status==='Completed').reduce((s,a) => s+(a.est_value||0), 0);
-  const eventsScheduled = expos.filter(e => e.date).length;
-  const avgMonthly = pipeline / 12;
   document.getElementById('cal-stat-pipeline').textContent = fmtCurrency(pipeline) || '$0';
   document.getElementById('cal-stat-won').textContent      = fmtCurrency(won)      || '$0';
-  document.getElementById('cal-stat-avg').textContent      = fmtCurrency(Math.round(avgMonthly)) || '$0';
+  document.getElementById('cal-stat-avg').textContent      = fmtCurrency(Math.round(pipeline / 12)) || '$0';
   document.getElementById('cal-stat-events').textContent   = eventsScheduled;
 }
 
