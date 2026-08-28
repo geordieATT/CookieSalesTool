@@ -144,6 +144,82 @@ body {
 }
 .btn-delete-event:hover { background: rgba(255,59,48,0.08); border-color: rgba(255,59,48,0.5); }
 
+/* ── Mode toggle (Business / Campaign) ── */
+.mode-toggle-wrap { display: flex; align-items: center; gap: 8px; }
+.mode-lock-btn {
+  background: rgba(0,0,0,0.06);
+  border: none;
+  border-radius: 8px;
+  width: 30px;
+  height: 30px;
+  font-size: 13px;
+  cursor: pointer;
+  color: #6e6e73;
+  transition: background .15s, color .15s;
+}
+.mode-lock-btn:hover { background: rgba(0,0,0,0.1); color: #1d1d1f; }
+.mode-toggle-wrap.locked .mode-switch-track { cursor: not-allowed; opacity: 0.55; }
+.mode-switch { display: flex; align-items: center; gap: 8px; }
+.mode-switch-label { font-size: 12px; font-weight: 600; color: #aeaeb2; transition: color .15s; }
+.mode-switch-label.active { color: #1d1d1f; }
+.mode-switch-track {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  background: #0071e3;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background .18s;
+}
+.mode-switch-track.on { background: #5856d6; }
+.mode-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  transition: transform .18s;
+}
+.mode-switch-track.on .mode-switch-thumb { transform: translateX(20px); }
+
+/* ── Campaign order panel ── */
+.campaign-panel {
+  display: none;
+  padding: 16px 20px;
+  background: #fff;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  margin-bottom: 16px;
+  border-radius: 14px;
+}
+.campaign-panel.open { display: block; }
+.campaign-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+@media (max-width: 720px) { .campaign-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 480px) { .campaign-grid { grid-template-columns: 1fr; } }
+.campaign-field-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: #6e6e73; margin-bottom: 4px; }
+.campaign-field-full { grid-column: 1 / -1; }
+.campaign-radios { display: flex; gap: 16px; align-items: center; padding-top: 4px; }
+.campaign-radios label { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; cursor: pointer; }
+.campaign-radios input[type="radio"] { accent-color: #0071e3; cursor: pointer; width: 15px; height: 15px; }
+.campaign-delivery-section { display: none; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 4px; }
+.campaign-delivery-section.open { display: grid; }
+@media (max-width: 720px) { .campaign-delivery-section { grid-template-columns: 1fr 1fr; } }
+.campaign-note-check { display: flex; align-items: center; gap: 8px; padding-top: 4px; }
+.campaign-note-check input[type="checkbox"] { accent-color: #0071e3; cursor: pointer; width: 15px; height: 15px; }
+.campaign-note-check label { font-size: 13px; font-weight: 500; cursor: pointer; }
+.campaign-note-text { display: none; margin-top: 8px; }
+.campaign-note-text.open { display: block; }
+.campaign-panel-actions { display: flex; gap: 8px; margin-top: 16px; }
+
+/* ── Campaign orders table ── */
+.pill-collect-pickup   { background: rgba(52,199,89,0.14);  color: #1a7f37; }
+.pill-collect-delivery { background: rgba(0,113,227,0.12);  color: #0071e3; }
+
 /* ── Stats bar ── */
 .stats-bar { display: flex; gap: 14px; margin-bottom: 18px; flex-wrap: wrap; }
 .stat-card {
@@ -828,6 +904,8 @@ tbody tr.data-row.completed-row .cell-inner { text-decoration: line-through; col
 .cal-day.has-event:hover { filter: brightness(1.12); }
 .cal-day.selecting { background: rgba(0,113,227,0.2) !important; color: #0071e3 !important; font-weight: 600; }
 .cal-day.sel-anchor { background: rgba(0,113,227,0.38) !important; color: #0071e3 !important; }
+.cal-day.has-event { cursor: grab; }
+.cal-day.drop-target { outline: 2px dashed #0071e3; outline-offset: -2px; }
 
 /* Assign popup */
 .cal-assign-overlay { display: none; position: fixed; inset: 0; z-index: 500; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); }
@@ -895,74 +973,198 @@ tbody tr.data-row.completed-row .cell-inner { text-decoration: line-through; col
     <div class="expo-header">
       <div class="expo-title" id="expo-title"></div>
       <div class="expo-meta" id="expo-meta"></div>
-      <button class="btn-delete-event" id="btn-delete-event">Delete event</button>
+      <div class="mode-toggle-wrap locked" id="mode-toggle-wrap">
+        <button class="mode-lock-btn" id="mode-lock-btn" title="Unlock to change mode">&#128274;</button>
+        <div class="mode-switch">
+          <span class="mode-switch-label" id="mode-label-business">Business</span>
+          <button class="mode-switch-track" id="mode-switch-track" role="switch" aria-checked="false" title="Switch mode"><span class="mode-switch-thumb"></span></button>
+          <span class="mode-switch-label" id="mode-label-campaign">Campaign</span>
+        </div>
+      </div>
+      <button class="btn-delete-event" id="btn-delete-event" style="margin-left:0">Delete event</button>
     </div>
 
-    <div class="stats-bar">
-      <div class="stat-card">
-        <div class="stat-label">Total Won</div>
-        <div class="stat-value won-color" id="stat-won">$0</div>
+    <div id="business-view">
+      <div class="stats-bar">
+        <div class="stat-card">
+          <div class="stat-label">Total Won</div>
+          <div class="stat-value won-color" id="stat-won">$0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Closing</div>
+          <div class="stat-value closing-color" id="stat-closing">$0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Pipeline</div>
+          <div class="stat-value pipeline-color" id="stat-pipeline">$0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Cookies Ordered</div>
+          <div class="stat-value cookies-color" id="stat-cookies">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Cookies Won</div>
+          <div class="stat-value won-color" id="stat-cookies-won">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Leads</div>
+          <div class="stat-value leads-color" id="stat-leads">0</div>
+        </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-label">Total Closing</div>
-        <div class="stat-value closing-color" id="stat-closing">$0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Total Pipeline</div>
-        <div class="stat-value pipeline-color" id="stat-pipeline">$0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Cookies Ordered</div>
-        <div class="stat-value cookies-color" id="stat-cookies">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Cookies Won</div>
-        <div class="stat-value won-color" id="stat-cookies-won">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Total Leads</div>
-        <div class="stat-value leads-color" id="stat-leads">0</div>
-      </div>
+
+      <div class="table-card"><div class="table-wrap">
+        <table id="leads-table">
+          <thead>
+            <tr>
+              <th class="th-icon" title="Need to message">&#9993;</th>
+              <th class="th-icon" title="All sorted / complete">&#10003;</th>
+              <th class="th-icon sortable" data-sort="starred" title="Sort by starred">&#9733;<span class="sort-arrow"></span></th>
+              <th class="sortable" data-sort="company">Company<span class="sort-arrow"></span></th>
+              <th class="sortable" data-sort="contact_name">Contact<span class="sort-arrow"></span></th>
+              <th class="sortable" data-sort="source">Source<span class="sort-arrow"></span></th>
+              <th>Phone</th>
+              <th class="sortable" data-sort="status">Status<span class="sort-arrow"></span></th>
+              <th class="sortable" data-sort="est_quantity">Qty<span class="sort-arrow"></span></th>
+              <th class="sortable" data-sort="est_value">Est. value<span class="sort-arrow"></span></th>
+              <th>Next action</th>
+              <th class="sortable" data-sort="next_action_due">Due date<span class="sort-arrow"></span></th>
+              <th style="min-width:130px">Notes</th>
+              <th class="th-icon" title="Message logs"></th>
+              <th class="th-icon"></th>
+            </tr>
+          </thead>
+          <tbody id="leads-body"></tbody>
+          <tfoot>
+            <tr class="add-row">
+              <td colspan="15">
+                <button class="add-row-btn" id="btn-add-attendee">Add attendee</button>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div></div>
     </div>
 
-    <div class="table-card"><div class="table-wrap">
-      <table id="leads-table">
-        <thead>
-          <tr>
-            <th class="th-icon" title="Need to message">&#9993;</th>
-            <th class="th-icon" title="All sorted / complete">&#10003;</th>
-            <th class="th-icon sortable" data-sort="starred" title="Sort by starred">&#9733;<span class="sort-arrow"></span></th>
-            <th class="sortable" data-sort="company">Company<span class="sort-arrow"></span></th>
-            <th class="sortable" data-sort="contact_name">Contact<span class="sort-arrow"></span></th>
-            <th class="sortable" data-sort="source">Source<span class="sort-arrow"></span></th>
-            <th>Phone</th>
-            <th class="sortable" data-sort="status">Status<span class="sort-arrow"></span></th>
-            <th class="sortable" data-sort="est_quantity">Qty<span class="sort-arrow"></span></th>
-            <th class="sortable" data-sort="est_value">Est. value<span class="sort-arrow"></span></th>
-            <th>Next action</th>
-            <th class="sortable" data-sort="next_action_due">Due date<span class="sort-arrow"></span></th>
-            <th style="min-width:130px">Notes</th>
-            <th class="th-icon" title="Message logs"></th>
-            <th class="th-icon"></th>
-          </tr>
-        </thead>
-        <tbody id="leads-body"></tbody>
-        <tfoot>
-          <tr class="add-row">
-            <td colspan="15">
-              <button class="add-row-btn" id="btn-add-attendee">Add attendee</button>
-            </td>
-          </tr>
-        </tfoot>
-      </table>
-    </div></div>
+    <div id="campaign-view" style="display:none">
+      <div class="stats-bar">
+        <div class="stat-card">
+          <div class="stat-label">6-packs</div>
+          <div class="stat-value leads-color" id="cstat-box6">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">12-packs</div>
+          <div class="stat-value leads-color" id="cstat-box12">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Paid</div>
+          <div class="stat-value won-color" id="cstat-paid">$0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Orders</div>
+          <div class="stat-value pipeline-color" id="cstat-orders">0</div>
+        </div>
+      </div>
+
+      <div class="campaign-panel" id="campaign-panel">
+        <div class="campaign-grid">
+          <div>
+            <div class="campaign-field-label">Name</div>
+            <input type="text" class="panel-input" id="cf-name" style="width:100%" autocomplete="off">
+          </div>
+          <div>
+            <div class="campaign-field-label">Email</div>
+            <input type="email" class="panel-input" id="cf-email" style="width:100%" autocomplete="off">
+          </div>
+          <div>
+            <div class="campaign-field-label">Phone</div>
+            <input type="text" class="panel-input" id="cf-phone" style="width:100%" autocomplete="off">
+          </div>
+          <div>
+            <div class="campaign-field-label">6-pack boxes</div>
+            <input type="number" min="0" class="panel-input" id="cf-box6" style="width:100%" placeholder="0">
+          </div>
+          <div>
+            <div class="campaign-field-label">12-pack boxes</div>
+            <input type="number" min="0" class="panel-input" id="cf-box12" style="width:100%" placeholder="0">
+          </div>
+          <div>
+            <div class="campaign-field-label">Amount paid</div>
+            <input type="number" min="0" step="0.01" class="panel-input" id="cf-amount-paid" style="width:100%" placeholder="0.00">
+          </div>
+          <div class="campaign-field-full">
+            <div class="campaign-field-label">Collection</div>
+            <div class="campaign-radios">
+              <label><input type="radio" name="cf-collection" class="cf-collection" value="pickup"> Pickup</label>
+              <label><input type="radio" name="cf-collection" class="cf-collection" value="delivery"> Delivery</label>
+            </div>
+            <div class="campaign-delivery-section" id="cf-delivery-section">
+              <div>
+                <div class="campaign-field-label">Speed</div>
+                <select class="panel-input" id="cf-delivery-speed" style="width:100%">
+                  <option value="overnight">Overnight</option>
+                  <option value="economy">Economy</option>
+                </select>
+              </div>
+              <div style="grid-column:span 2">
+                <div class="campaign-field-label">Address</div>
+                <input type="text" class="panel-input" id="cf-address" style="width:100%" autocomplete="off">
+              </div>
+              <div>
+                <div class="campaign-field-label">Shipping paid</div>
+                <input type="number" min="0" step="0.01" class="panel-input" id="cf-shipping-paid" style="width:100%" placeholder="0.00">
+              </div>
+            </div>
+          </div>
+          <div class="campaign-field-full">
+            <div class="campaign-note-check">
+              <input type="checkbox" id="cf-note-check">
+              <label for="cf-note-check">Printed note</label>
+            </div>
+            <div class="campaign-note-text" id="cf-note-text-wrap">
+              <textarea class="panel-input" id="cf-note-text" style="width:100%;min-height:60px;resize:vertical" placeholder="What should the note say?"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="campaign-panel-actions">
+          <button class="btn primary" id="btn-save-campaign-order">Save order</button>
+          <button class="btn" id="btn-cancel-campaign-order">Cancel</button>
+        </div>
+      </div>
+
+      <div class="table-card"><div class="table-wrap">
+        <table id="campaign-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>6-pack</th>
+              <th>12-pack</th>
+              <th>Paid</th>
+              <th>Collection</th>
+              <th>Note</th>
+              <th class="th-icon"></th>
+              <th class="th-icon"></th>
+            </tr>
+          </thead>
+          <tbody id="campaign-body"></tbody>
+          <tfoot>
+            <tr class="add-row">
+              <td colspan="10">
+                <button class="add-row-btn" id="btn-add-campaign-order">Add order</button>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div></div>
+    </div>
   </div>
 
   <!-- ── Calendar view ── -->
   <div id="cal-view" style="display:none">
     <div class="expo-header">
       <div class="expo-title">Event Calendar</div>
-      <div class="expo-meta">Click a coloured day to open its event &nbsp;&middot;&nbsp; Drag on empty days to assign a date range</div>
+      <div class="expo-meta">Click a coloured day to open its event &nbsp;&middot;&nbsp; drag it onto another day to reschedule &nbsp;&middot;&nbsp; drag on empty days to assign a date range</div>
       <button class="btn" id="cal-close" style="margin-left:auto;font-size:12px;padding:5px 14px">Close calendar</button>
     </div>
     <div class="stats-bar">
@@ -1194,6 +1396,34 @@ const msgLogContent    = document.getElementById('msg-log-content');
 const msgLogSave       = document.getElementById('msg-log-save');
 const msgModalClose    = document.getElementById('msg-modal-close');
 
+// ── Mode toggle / campaign refs ──────────────────────────────────────────────────
+const modeToggleWrap   = document.getElementById('mode-toggle-wrap');
+const modeLockBtn      = document.getElementById('mode-lock-btn');
+const modeSwitchTrack  = document.getElementById('mode-switch-track');
+const modeLabelBusiness= document.getElementById('mode-label-business');
+const modeLabelCampaign= document.getElementById('mode-label-campaign');
+const businessView     = document.getElementById('business-view');
+const campaignView     = document.getElementById('campaign-view');
+const campaignBody     = document.getElementById('campaign-body');
+const btnAddCampaignOrder    = document.getElementById('btn-add-campaign-order');
+const campaignPanel     = document.getElementById('campaign-panel');
+const btnSaveCampaignOrder = document.getElementById('btn-save-campaign-order');
+const btnCancelCampaignOrder = document.getElementById('btn-cancel-campaign-order');
+const cfName = document.getElementById('cf-name');
+const cfEmail = document.getElementById('cf-email');
+const cfPhone = document.getElementById('cf-phone');
+const cfBox6 = document.getElementById('cf-box6');
+const cfBox12 = document.getElementById('cf-box12');
+const cfAmountPaid = document.getElementById('cf-amount-paid');
+const cfDeliverySection = document.getElementById('cf-delivery-section');
+const cfDeliverySpeed = document.getElementById('cf-delivery-speed');
+const cfAddress = document.getElementById('cf-address');
+const cfShippingPaid = document.getElementById('cf-shipping-paid');
+const cfNoteCheck = document.getElementById('cf-note-check');
+const cfNoteTextWrap = document.getElementById('cf-note-text-wrap');
+const cfNoteText = document.getElementById('cf-note-text');
+let modeLocked = true, campaignEditingId = null;
+
 // ── Toast ──────────────────────────────────────────────────────────────────────
 let toastTimer = null;
 function showToast(msg = 'Saved') {
@@ -1266,7 +1496,14 @@ function esc(s) {
   if (s == null) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-function today() { return new Date().toISOString().slice(0,10); }
+function nzDateParts(d = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Pacific/Auckland', year:'numeric', month:'2-digit', day:'2-digit' }).format(d).split('-');
+  return { year:+parts[0], month:+parts[1]-1, day:+parts[2] };
+}
+function today() {
+  const {year,month,day} = nzDateParts();
+  return year + '-' + String(month+1).padStart(2,'0') + '-' + String(day).padStart(2,'0');
+}
 function fmtDate(d) {
   if (!d) return '';
   const [y,m,day] = d.split('-');
@@ -1294,6 +1531,16 @@ function dueDateHtml(d) {
 
 // ── Stats ──────────────────────────────────────────────────────────────────────
 function updateStats() {
+  if (currentExpo && currentExpo.mode === 'campaign') {
+    const box6 = attendees.reduce((s,a)=>s+(a.box6_qty||0),0);
+    const box12 = attendees.reduce((s,a)=>s+(a.box12_qty||0),0);
+    const paid = attendees.reduce((s,a)=>s+(a.amount_paid||0)+(a.shipping_paid||0),0);
+    document.getElementById('cstat-box6').textContent = box6.toLocaleString('en-NZ');
+    document.getElementById('cstat-box12').textContent = box12.toLocaleString('en-NZ');
+    document.getElementById('cstat-paid').textContent = paid ? fmtCurrency(paid) : '$0';
+    document.getElementById('cstat-orders').textContent = attendees.length;
+    return;
+  }
   const ACTIVE = ['New','In Contact','Waiting Reply','Ordered and Unpaid','Ordered and Paid','Completed'];
   const won          = attendees.filter(a=>a.status==='Ordered and Paid'||a.status==='Completed').reduce((s,a)=>s+(a.est_value||0),0);
   const closing      = attendees.filter(a=>a.status==='Ordered and Unpaid').reduce((s,a)=>s+(a.est_value||0),0);
@@ -1370,8 +1617,47 @@ async function selectExpo(id) {
   expoTitle.textContent = currentExpo.name;
   const parts=[]; if(currentExpo.date)parts.push(fmtDate(currentExpo.date)); if(currentExpo.location)parts.push(currentExpo.location);
   expoMeta.textContent = parts.join(' · ');
+  modeLocked = true;
+  modeLockBtn.innerHTML = '&#128274;';
+  modeLockBtn.title = 'Unlock to change mode';
+  modeToggleWrap.classList.add('locked');
+  renderModeToggle();
   await loadAttendees();
 }
+
+// ── Mode toggle ────────────────────────────────────────────────────────────────
+function renderModeToggle() {
+  const isCampaign = !!(currentExpo && currentExpo.mode === 'campaign');
+  modeSwitchTrack.classList.toggle('on', isCampaign);
+  modeSwitchTrack.setAttribute('aria-checked', String(isCampaign));
+  modeLabelBusiness.classList.toggle('active', !isCampaign);
+  modeLabelCampaign.classList.toggle('active', isCampaign);
+  businessView.style.display = isCampaign ? 'none' : '';
+  campaignView.style.display = isCampaign ? '' : 'none';
+}
+modeLockBtn.addEventListener('click', () => {
+  modeLocked = !modeLocked;
+  modeLockBtn.innerHTML = modeLocked ? '&#128274;' : '&#128275;';
+  modeLockBtn.title = modeLocked ? 'Unlock to change mode' : 'Lock';
+  modeToggleWrap.classList.toggle('locked', modeLocked);
+});
+modeSwitchTrack.addEventListener('click', async () => {
+  if (modeLocked) { showToast('Unlock to change mode'); return; }
+  if (!currentExpo) return;
+  const newMode = currentExpo.mode === 'campaign' ? 'business' : 'campaign';
+  const {error} = await sb.from('expos').update({mode:newMode}).eq('id', currentExpo.id);
+  if (error) { console.error(error); showToast('Error switching mode'); return; }
+  currentExpo.mode = newMode;
+  const ex = expos.find(e=>e.id===currentExpo.id); if (ex) ex.mode = newMode;
+  modeLocked = true;
+  modeLockBtn.innerHTML = '&#128274;';
+  modeLockBtn.title = 'Unlock to change mode';
+  modeToggleWrap.classList.add('locked');
+  renderModeToggle();
+  renderTable();
+  updateStats();
+  showToast('Switched to ' + (newMode==='campaign'?'Campaign':'Business') + ' mode');
+});
 
 // ── Attendees ──────────────────────────────────────────────────────────────────
 async function loadAttendees() {
@@ -1381,6 +1667,7 @@ async function loadAttendees() {
   attendees = data||[]; renderTable(); updateStats();
 }
 function renderTable() {
+  if (currentExpo && currentExpo.mode === 'campaign') { renderCampaignTable(); return; }
   leadsBody.innerHTML='';
   sortedAttendees().forEach(a => {
     leadsBody.insertAdjacentHTML('beforeend', rowHtml(a));
@@ -1390,6 +1677,130 @@ function renderTable() {
   updateSortHeaders();
   if (hiddenStatuses.size > 0) applyFilter();
 }
+
+// ── Campaign orders ──────────────────────────────────────────────────────────────
+function collectionLabel(a) {
+  if (a.fulfillment_type === 'delivery') return 'Delivery' + (a.delivery_speed ? ' · ' + (a.delivery_speed==='overnight'?'Overnight':'Economy') : '');
+  if (a.fulfillment_type === 'pickup') return 'Pickup';
+  return '';
+}
+function campaignRowHtml(a) {
+  const collectionCls = a.fulfillment_type==='delivery' ? 'pill-collect-delivery' : a.fulfillment_type==='pickup' ? 'pill-collect-pickup' : '';
+  const collectionHtml = a.fulfillment_type ? '<span class="pill '+collectionCls+'">'+esc(collectionLabel(a))+'</span>' : '';
+  const noteHtml = a.printed_note ? '<span title="'+esc(a.printed_note_text||'')+'" style="cursor:help;color:#0071e3;font-weight:600">Yes</span>' : '<span style="color:#aeaeb2">No</span>';
+  return '<tr class="data-row" data-id="'+esc(a.id)+'">' +
+    '<td><span class="cell-inner" style="cursor:default">'+esc(a.contact_name)+'</span></td>' +
+    '<td><span class="cell-inner" style="cursor:default">'+esc(a.email)+'</span></td>' +
+    '<td><span class="cell-inner" style="cursor:default">'+esc(a.phone)+'</span></td>' +
+    '<td style="text-align:center"><span class="cell-inner" style="cursor:default">'+(a.box6_qty||'')+'</span></td>' +
+    '<td style="text-align:center"><span class="cell-inner" style="cursor:default">'+(a.box12_qty||'')+'</span></td>' +
+    '<td><span class="cell-inner" style="cursor:default">'+(a.amount_paid!=null?fmtCurrency(a.amount_paid):'')+'</span></td>' +
+    '<td><span class="cell-inner" style="cursor:default">'+collectionHtml+'</span></td>' +
+    '<td style="text-align:center"><span class="cell-inner" style="cursor:default">'+noteHtml+'</span></td>' +
+    '<td style="text-align:center;padding:0 4px"><button class="expand-btn edit-campaign-btn" title="Edit" style="color:#0071e3">&#9998;</button></td>' +
+    '<td style="text-align:center;padding:0 4px"><button class="del-btn" title="Delete">&#215;</button></td>' +
+  '</tr>';
+}
+function attachCampaignRowEvents(tr) {
+  const id = tr.dataset.id;
+  tr.querySelector('.edit-campaign-btn').addEventListener('click', ()=>openCampaignPanel(id));
+  tr.querySelector('.del-btn').addEventListener('click', ()=>deleteCampaignOrder(tr));
+}
+function renderCampaignTable() {
+  campaignBody.innerHTML = '';
+  attendees.forEach(a => campaignBody.insertAdjacentHTML('beforeend', campaignRowHtml(a)));
+  campaignBody.querySelectorAll('tr.data-row').forEach(tr => attachCampaignRowEvents(tr));
+}
+async function deleteCampaignOrder(tr) {
+  const id = tr.dataset.id, att = attendees.find(a=>a.id===id);
+  const label = (att && att.contact_name) || 'this order';
+  if (!confirm('Delete order for '+label+'?')) return;
+  const {error} = await sb.from('attendees').delete().eq('id', id);
+  if (error) { console.error(error); return; }
+  attendees = attendees.filter(a=>a.id!==id);
+  tr.remove();
+  updateStats();
+  showToast('Deleted');
+}
+function resetCampaignForm() {
+  cfName.value=''; cfEmail.value=''; cfPhone.value=''; cfBox6.value=''; cfBox12.value=''; cfAmountPaid.value='';
+  document.querySelectorAll('.cf-collection').forEach(r=>r.checked=false);
+  cfDeliverySection.classList.remove('open');
+  cfDeliverySpeed.value='overnight'; cfAddress.value=''; cfShippingPaid.value='';
+  cfNoteCheck.checked=false; cfNoteTextWrap.classList.remove('open'); cfNoteText.value='';
+  campaignEditingId = null;
+}
+function openCampaignPanel(id) {
+  resetCampaignForm();
+  if (id) {
+    const a = attendees.find(x=>x.id===id);
+    if (a) {
+      campaignEditingId = id;
+      cfName.value = a.contact_name || '';
+      cfEmail.value = a.email || '';
+      cfPhone.value = a.phone || '';
+      cfBox6.value = a.box6_qty != null ? a.box6_qty : '';
+      cfBox12.value = a.box12_qty != null ? a.box12_qty : '';
+      cfAmountPaid.value = a.amount_paid != null ? a.amount_paid : '';
+      if (a.fulfillment_type) {
+        const r = document.querySelector('.cf-collection[value="'+a.fulfillment_type+'"]');
+        if (r) r.checked = true;
+        cfDeliverySection.classList.toggle('open', a.fulfillment_type==='delivery');
+      }
+      cfDeliverySpeed.value = a.delivery_speed || 'overnight';
+      cfAddress.value = a.delivery_address || '';
+      cfShippingPaid.value = a.shipping_paid != null ? a.shipping_paid : '';
+      cfNoteCheck.checked = !!a.printed_note;
+      cfNoteTextWrap.classList.toggle('open', !!a.printed_note);
+      cfNoteText.value = a.printed_note_text || '';
+    }
+  }
+  campaignPanel.classList.add('open');
+  cfName.focus();
+}
+function closeCampaignPanel() { campaignPanel.classList.remove('open'); campaignEditingId = null; }
+document.querySelectorAll('.cf-collection').forEach(r => {
+  r.addEventListener('change', () => { if (r.checked) cfDeliverySection.classList.toggle('open', r.value==='delivery'); });
+});
+cfNoteCheck.addEventListener('change', () => cfNoteTextWrap.classList.toggle('open', cfNoteCheck.checked));
+btnAddCampaignOrder.addEventListener('click', () => openCampaignPanel(null));
+btnCancelCampaignOrder.addEventListener('click', closeCampaignPanel);
+btnSaveCampaignOrder.addEventListener('click', async () => {
+  const name = cfName.value.trim();
+  if (!name) { cfName.focus(); return; }
+  const collectionR = Array.from(document.querySelectorAll('.cf-collection')).find(r=>r.checked);
+  const collection = collectionR ? collectionR.value : null;
+  const payload = {
+    expo_id: currentExpo.id,
+    contact_name: name,
+    email: cfEmail.value.trim() || null,
+    phone: cfPhone.value.trim() || null,
+    box6_qty: cfBox6.value === '' ? null : parseInt(cfBox6.value, 10),
+    box12_qty: cfBox12.value === '' ? null : parseInt(cfBox12.value, 10),
+    amount_paid: cfAmountPaid.value === '' ? null : parseFloat(cfAmountPaid.value),
+    fulfillment_type: collection,
+    delivery_speed: collection === 'delivery' ? cfDeliverySpeed.value : null,
+    delivery_address: collection === 'delivery' ? (cfAddress.value.trim() || null) : null,
+    shipping_paid: collection === 'delivery' ? (cfShippingPaid.value === '' ? null : parseFloat(cfShippingPaid.value)) : null,
+    printed_note: cfNoteCheck.checked,
+    printed_note_text: cfNoteCheck.checked ? (cfNoteText.value.trim() || null) : null,
+  };
+  if (campaignEditingId) {
+    const {data, error} = await sb.from('attendees').update(payload).eq('id', campaignEditingId).select().single();
+    if (error) { console.error(error); showToast('Error saving'); return; }
+    const idx = attendees.findIndex(a=>a.id===campaignEditingId);
+    if (idx >= 0) attendees[idx] = data;
+    showToast('Order updated');
+  } else {
+    const {data, error} = await sb.from('attendees').insert(payload).select().single();
+    if (error) { console.error(error); showToast('Error saving'); return; }
+    attendees.push(data);
+    showToast('Order added');
+  }
+  closeCampaignPanel();
+  renderTable();
+  updateStats();
+});
 
 function rowHtml(a) {
   const needsMsg = !!a.needs_message;
@@ -1546,7 +1957,29 @@ function startEdit(tr, cell) {
     cell.innerHTML='';cell.appendChild(control);control.focus();
 
   } else if (field==='next_action_due') {
-    control=document.createElement('input');control.className='cell-edit';control.type='date';control.value=att[field]||'';
+    if (currentExpo && currentExpo.date) {
+      control=document.createElement('select'); control.className='cell-edit';
+      const empty=document.createElement('option'); empty.value=''; empty.textContent='— No due date —';
+      if(!att[field]) empty.selected=true;
+      control.appendChild(empty);
+      const eventDate = parseDateStr(currentExpo.date);
+      for (let i=0; i<=14; i++) {
+        const d = new Date(eventDate); d.setDate(d.getDate()-i);
+        const val = fmtDateStr(d);
+        const o=document.createElement('option'); o.value=val;
+        o.textContent = (i===0 ? 'Event day' : i+' day'+(i>1?'s':'')+' before') + ' — ' + fmtDate(val);
+        if(val===att[field]) o.selected=true;
+        control.appendChild(o);
+      }
+      if (att[field] && ![...control.options].some(o=>o.value===att[field])) {
+        const o=document.createElement('option'); o.value=att[field]; o.selected=true;
+        o.textContent='Current — '+fmtDate(att[field]);
+        control.appendChild(o);
+      }
+    } else {
+      control=document.createElement('input');control.type='date';control.value=att[field]||'';
+    }
+    control.className='cell-edit';
     cell.innerHTML='';cell.appendChild(control);control.focus();
     control.addEventListener('change',()=>control.blur());
 
@@ -2006,15 +2439,16 @@ function renderMonth(year, month) {
     let cls = 'cal-day', sty = '';
     if (expo) { cls += ' has-event'; sty = 'background:' + getExpoColor(expo.id) + ';'; }
     if (dateStr === todayStr) cls += ' today';
-    html += '<div class="' + cls + '" style="' + sty + '" data-date="' + dateStr + '" data-expo-id="' + (expo ? esc(expo.id) : '') + '">' + d + '</div>';
+    const tip = expo ? ' title="' + esc(expo.name + (expo.location ? ' — ' + expo.location : '')) + '"' : '';
+    html += '<div class="' + cls + '" style="' + sty + '" data-date="' + dateStr + '" data-expo-id="' + (expo ? esc(expo.id) : '') + '"' + tip + '>' + d + '</div>';
   }
   html += '</div></div>';
   return html;
 }
 
 function renderCalendar() {
-  const now = new Date();
-  let y = now.getFullYear(), m = now.getMonth();
+  const nowParts = nzDateParts();
+  let y = nowParts.year, m = nowParts.month;
   let html = '';
   while (y < 2026 || (y === 2026 && m <= 11)) {
     html += renderMonth(y, m);
@@ -2022,7 +2456,13 @@ function renderCalendar() {
   }
   calBodyEl.innerHTML = html;
 
-  const withDates = expos.filter(e => e.date);
+  const todayStr = today();
+  const withDates = expos.filter(e => e.date).sort((a,b) => {
+    const aUpcoming = (a.date_end || a.date) >= todayStr;
+    const bUpcoming = (b.date_end || b.date) >= todayStr;
+    if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
+    return aUpcoming ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date);
+  });
   calLegendEl.innerHTML = withDates.length
     ? withDates.map(e =>
         '<div class="cal-legend-item">' +
@@ -2035,6 +2475,7 @@ function renderCalendar() {
 }
 
 let calDragging = false, calSelStart = null, calSelEnd = null;
+let calEventDrag = null;
 
 function initCalInteraction() {
   calBodyEl.onmousedown = e => {
@@ -2042,7 +2483,16 @@ function initCalInteraction() {
     if (!day) return;
     if (day.dataset.expoId) {
       const expo = expos.find(ex => ex.id === day.dataset.expoId);
-      if (expo) { expoSelect.value = expo.id; selectExpo(expo.id); closeCal(); }
+      if (!expo) return;
+      calEventDrag = {
+        expoId: expo.id,
+        originDate: day.dataset.date,
+        startDate: expo.date,
+        endDate: expo.date_end || expo.date,
+        targetDate: day.dataset.date,
+        moved: false,
+      };
+      e.preventDefault();
       return;
     }
     calDragging = true;
@@ -2051,6 +2501,14 @@ function initCalInteraction() {
     e.preventDefault();
   };
   calBodyEl.onmouseover = e => {
+    if (calEventDrag) {
+      const day = e.target.closest('.cal-day:not(.empty)');
+      if (!day) return;
+      if (day.dataset.date !== calEventDrag.originDate) calEventDrag.moved = true;
+      calEventDrag.targetDate = day.dataset.date;
+      updateCalDropTarget();
+      return;
+    }
     if (!calDragging) return;
     const day = e.target.closest('.cal-day:not(.empty)');
     if (!day || day.dataset.expoId) return;
@@ -2059,7 +2517,49 @@ function initCalInteraction() {
   };
 }
 
-document.addEventListener('mouseup', () => {
+function updateCalDropTarget() {
+  calBodyEl.querySelectorAll('.cal-day.drop-target').forEach(el => el.classList.remove('drop-target'));
+  if (!calEventDrag || !calEventDrag.moved) return;
+  const el = calBodyEl.querySelector('.cal-day[data-date="' + calEventDrag.targetDate + '"]');
+  if (el) el.classList.add('drop-target');
+}
+
+function parseDateStr(d) {
+  const [y, m, day] = d.split('-');
+  return new Date(+y, +m - 1, +day);
+}
+function fmtDateStr(dateObj) {
+  return dateObj.getFullYear() + '-' + String(dateObj.getMonth() + 1).padStart(2,'0') + '-' + String(dateObj.getDate()).padStart(2,'0');
+}
+
+async function moveEventToDate(expoId, oldStart, oldEnd, newStart) {
+  const spanDays  = Math.round((parseDateStr(oldEnd) - parseDateStr(oldStart)) / 86400000);
+  const newEndObj = parseDateStr(newStart);
+  newEndObj.setDate(newEndObj.getDate() + spanDays);
+  const newEnd = fmtDateStr(newEndObj);
+
+  const {error} = await sb.from('expos').update({date: newStart, date_end: newEnd}).eq('id', expoId);
+  if (error) { showToast('Failed to move event'); return; }
+  const ex = expos.find(e => e.id === expoId);
+  if (ex) { ex.date = newStart; ex.date_end = newEnd; }
+  renderCalendar();
+  renderExpoSelect();
+  showToast('Event moved to ' + fmtDate(newStart));
+}
+
+document.addEventListener('mouseup', async () => {
+  if (calEventDrag) {
+    const drag = calEventDrag;
+    calEventDrag = null;
+    calBodyEl.querySelectorAll('.cal-day.drop-target').forEach(el => el.classList.remove('drop-target'));
+    if (drag.moved && drag.targetDate !== drag.originDate) {
+      await moveEventToDate(drag.expoId, drag.startDate, drag.endDate, drag.targetDate);
+    } else if (!drag.moved) {
+      const expo = expos.find(ex => ex.id === drag.expoId);
+      if (expo) { expoSelect.value = expo.id; selectExpo(expo.id); closeCal(); }
+    }
+    return;
+  }
   if (!calDragging) return;
   calDragging = false;
   if (calSelStart && calSelEnd) {
@@ -2134,6 +2634,7 @@ function closeCal() {
   if (currentExpo) expoView.style.display = '';
   else noExpo.style.display = '';
   calDragging = false; calSelStart = null; calSelEnd = null;
+  calEventDrag = null;
 }
 
 btnCalendar.addEventListener('click', openCal);
@@ -2180,8 +2681,7 @@ document.addEventListener('keydown', e => {
 });
 
 // ── Init ───────────────────────────────────────────────────────────────────────
-await loadExpos();
-if(expos.length>0){expoSelect.value=expos[0].id;await selectExpo(expos[0].id);}
+await openCal();
 </script>
 </body>
 </html>
