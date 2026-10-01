@@ -187,17 +187,41 @@ body {
 }
 .mode-switch-track.on .mode-switch-thumb { transform: translateX(20px); }
 
-/* ── Campaign order panel ── */
-.campaign-panel {
+/* ── Popup (attendee / campaign order editing) ── */
+.popup-overlay {
   display: none;
-  padding: 16px 20px;
-  background: #fff;
-  border-bottom: 1px solid rgba(0,0,0,0.08);
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-  margin-bottom: 16px;
-  border-radius: 14px;
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
-.campaign-panel.open { display: block; }
+.popup-overlay.open { display: flex; }
+.popup-box {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px 22px 22px;
+  width: 100%;
+  max-width: 440px;
+  max-height: 92vh;
+  overflow-y: auto;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.22), 0 0 0 1px rgba(0,0,0,0.06);
+  animation: modal-in .15s ease;
+}
+.popup-box.wide { max-width: 680px; }
+.popup-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.popup-title { flex: 1; font-size: 16px; font-weight: 600; letter-spacing: -0.02em; color: #1d1d1f; }
+.popup-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.popup-fields .full { grid-column: 1 / -1; }
+.popup-fields .panel-input { width: 100%; font-size: 16px; }
+.popup-actions { display: flex; gap: 8px; margin-top: 18px; }
+
+/* ── Campaign order panel (shown inside a popup) ── */
+.campaign-panel { display: block; }
 .campaign-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
 @media (max-width: 720px) { .campaign-grid { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 480px) { .campaign-grid { grid-template-columns: 1fr; } }
@@ -935,6 +959,49 @@ tbody tr.data-row.completed-row .cell-inner { text-decoration: line-through; col
 .cal-assign-divider::before, .cal-assign-divider::after { content: ''; flex: 1; height: 1px; background: rgba(0,0,0,0.1); }
 .cal-assign-divider span { font-size: 11px; color: #aeaeb2; white-space: nowrap; }
 .cal-assign-btns { display: flex; gap: 8px; }
+
+/* Calendar month navigation + per-month money */
+.cal-nav { display: flex; align-items: center; gap: 8px; padding: 14px 18px 0; flex-wrap: wrap; }
+.cal-nav-btn {
+  background: rgba(0,0,0,0.06); border: none; border-radius: 8px; cursor: pointer;
+  min-width: 40px; height: 40px; font-size: 18px; color: #1d1d1f; font-family: inherit;
+}
+.cal-nav-btn:hover { background: rgba(0,0,0,0.1); }
+.cal-nav-btn.text { font-size: 13px; font-weight: 500; padding: 0 14px; }
+.cal-nav-range { font-size: 14px; font-weight: 600; color: #1d1d1f; margin: 0 6px; }
+.cal-month-money { font-size: 11px; color: #6e6e73; margin: -4px 0 8px; line-height: 1.5; }
+.cal-month-money strong { color: #1a7f37; font-weight: 700; }
+.cal-month-money .pipe { color: #3a3a3c; font-weight: 600; }
+
+/* ── Analytics view ── */
+.an-card { background: #fff; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.05); padding: 18px 20px 20px; margin-bottom: 18px; }
+.an-card-title { font-size: 15px; font-weight: 600; color: #1d1d1f; letter-spacing: -0.01em; }
+.an-card-sub { font-size: 12px; color: #6e6e73; margin-top: 2px; }
+.an-legend { display: flex; gap: 16px; flex-wrap: wrap; margin: 12px 0 4px; font-size: 12px; color: #3a3a3c; }
+.an-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.an-legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.an-chart { display: grid; grid-template-columns: repeat(12, 1fr); gap: 6px; align-items: end; height: 220px; padding-top: 22px; border-bottom: 1px solid rgba(0,0,0,0.12); position: relative; }
+.an-col { display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; height: 100%; position: relative; cursor: default; }
+.an-col:hover { background: rgba(0,0,0,0.03); border-radius: 6px 6px 0 0; }
+.an-seg { width: 60%; margin: 0 auto; min-height: 0; }
+.an-seg:not(:last-child) { margin-bottom: 2px; }
+.an-seg.top { border-radius: 4px 4px 0 0; }
+.an-total { position: absolute; left: 0; right: 0; text-align: center; font-size: 10px; font-weight: 600; color: #3a3a3c; white-space: nowrap; }
+.an-labels { display: grid; grid-template-columns: repeat(12, 1fr); gap: 6px; margin-top: 6px; }
+.an-labels div { text-align: center; font-size: 11px; color: #6e6e73; }
+.an-labels div.now { color: #0071e3; font-weight: 700; }
+.an-tip { position: fixed; z-index: 600; pointer-events: none; background: #1d1d1f; color: #fff; font-size: 12px; line-height: 1.5; padding: 8px 10px; border-radius: 8px; display: none; white-space: nowrap; }
+.an-table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 12px; }
+.an-table th, .an-table td { padding: 6px 8px; text-align: right; border-bottom: 1px solid rgba(0,0,0,0.06); white-space: nowrap; }
+.an-table th:first-child, .an-table td:first-child { text-align: left; }
+.an-table th { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: #6e6e73; font-weight: 600; }
+.an-table tfoot td { font-weight: 700; }
+.an-table-wrap { overflow-x: auto; }
+@media (max-width: 600px) {
+  .an-chart, .an-labels { gap: 2px; }
+  .an-total { display: none; }
+  .popup-fields { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
@@ -946,6 +1013,7 @@ tbody tr.data-row.completed-row .cell-inner { text-decoration: line-through; col
   </select>
   <button class="btn primary" id="btn-add-expo">+ Add event</button>
   <button class="btn" id="btn-calendar">Calendar</button>
+  <button class="btn" id="btn-analytics">Analytics</button>
   <button class="btn filter-btn" id="btn-filter">Filter statuses</button>
   <div class="topbar-spacer"></div>
   <button class="settings-icon-btn" id="btn-settings" title="API Settings">&#9881;</button>
@@ -1029,6 +1097,7 @@ tbody tr.data-row.completed-row .cell-inner { text-decoration: line-through; col
               <th>Next action</th>
               <th class="sortable" data-sort="next_action_due">Due date<span class="sort-arrow"></span></th>
               <th style="min-width:130px">Notes</th>
+              <th class="th-icon" title="Edit"></th>
               <th class="th-icon" title="Message logs"></th>
               <th class="th-icon"></th>
             </tr>
@@ -1036,7 +1105,7 @@ tbody tr.data-row.completed-row .cell-inner { text-decoration: line-through; col
           <tbody id="leads-body"></tbody>
           <tfoot>
             <tr class="add-row">
-              <td colspan="15">
+              <td colspan="16">
                 <button class="add-row-btn" id="btn-add-attendee">Add attendee</button>
               </td>
             </tr>
@@ -1065,7 +1134,12 @@ tbody tr.data-row.completed-row .cell-inner { text-decoration: line-through; col
         </div>
       </div>
 
-      <div class="campaign-panel" id="campaign-panel">
+      <div class="popup-overlay" id="campaign-overlay">
+      <div class="popup-box wide campaign-panel" id="campaign-panel">
+        <div class="popup-head">
+          <div class="popup-title" id="campaign-popup-title">Add order</div>
+          <button class="modal-close-btn" id="campaign-popup-close" title="Close">&#x2715;</button>
+        </div>
         <div class="campaign-grid">
           <div>
             <div class="campaign-field-label">Name</div>
@@ -1130,6 +1204,7 @@ tbody tr.data-row.completed-row .cell-inner { text-decoration: line-through; col
           <button class="btn" id="btn-cancel-campaign-order">Cancel</button>
         </div>
       </div>
+      </div>
 
       <div class="table-card"><div class="table-wrap">
         <table id="campaign-table">
@@ -1186,8 +1261,89 @@ tbody tr.data-row.completed-row .cell-inner { text-decoration: line-through; col
       </div>
     </div>
     <div class="table-card">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" id="cal-prev" title="Earlier months">&#8249;</button>
+        <button class="cal-nav-btn" id="cal-next" title="Later months">&#8250;</button>
+        <span class="cal-nav-range" id="cal-range"></span>
+        <button class="cal-nav-btn text" id="cal-today">This month</button>
+      </div>
       <div class="cal-legend" id="cal-legend"></div>
       <div class="cal-body" id="cal-body"></div>
+    </div>
+  </div>
+
+  <!-- ── Analytics view ── -->
+  <div id="an-view" style="display:none">
+    <div class="expo-header">
+      <div class="expo-title">Analytics</div>
+      <div class="expo-meta">Grouped by the month each event starts</div>
+      <button class="btn" id="an-close" style="margin-left:auto;font-size:12px;padding:5px 14px">Close analytics</button>
+    </div>
+    <div class="cal-nav" style="padding:0 0 14px">
+      <button class="cal-nav-btn" id="an-prev" title="Previous year">&#8249;</button>
+      <button class="cal-nav-btn" id="an-next" title="Next year">&#8250;</button>
+      <span class="cal-nav-range" id="an-year"></span>
+    </div>
+    <div class="stats-bar">
+      <div class="stat-card"><div class="stat-label">Won this year</div><div class="stat-value won-color" id="an-stat-won">$0</div></div>
+      <div class="stat-card"><div class="stat-label">Still open</div><div class="stat-value leads-color" id="an-stat-open">$0</div></div>
+      <div class="stat-card"><div class="stat-label">Best month</div><div class="stat-value pipeline-color" id="an-stat-best">-</div></div>
+      <div class="stat-card"><div class="stat-label">Cookies sold</div><div class="stat-value cookies-color" id="an-stat-cookies">0</div></div>
+    </div>
+    <div class="an-card">
+      <div class="an-card-title">Money per month</div>
+      <div class="an-card-sub">Won = paid or completed orders, plus campaign payments. Still open = the rest of the active pipeline.</div>
+      <div class="an-legend"><span><i style="background:#1a7f37"></i>Won</span><span><i style="background:#0071e3"></i>Still open</span></div>
+      <div class="an-chart" id="an-money-chart"></div>
+      <div class="an-labels" id="an-money-labels"></div>
+    </div>
+    <div class="an-card">
+      <div class="an-card-title">Cookies per month</div>
+      <div class="an-card-sub">Business = cookie qty on paid or completed leads. Campaign = 6-pack and 12-pack boxes, counted as cookies.</div>
+      <div class="an-legend"><span><i style="background:#0071e3"></i>Business cookies</span><span><i style="background:#e67e22"></i>Campaign box cookies</span></div>
+      <div class="an-chart" id="an-cookie-chart"></div>
+      <div class="an-labels" id="an-cookie-labels"></div>
+    </div>
+    <div class="an-card">
+      <div class="an-card-title">Month by month</div>
+      <div class="an-table-wrap"><table class="an-table" id="an-table"></table></div>
+    </div>
+  </div>
+</div>
+<div class="an-tip" id="an-tip"></div>
+
+<!-- ── Business attendee popup ── -->
+<div class="popup-overlay" id="att-overlay">
+  <div class="popup-box">
+    <div class="popup-head">
+      <div class="popup-title" id="att-popup-title">Add attendee</div>
+      <button class="modal-close-btn" id="att-popup-close" title="Close">&#x2715;</button>
+    </div>
+    <div class="popup-fields">
+      <div class="full">
+        <div class="campaign-field-label">Name</div>
+        <input type="text" class="panel-input" id="af-name" autocomplete="off">
+      </div>
+      <div class="full">
+        <div class="campaign-field-label">Status</div>
+        <select class="panel-input" id="af-status"></select>
+      </div>
+      <div>
+        <div class="campaign-field-label">Qty</div>
+        <input type="number" min="0" class="panel-input" id="af-qty" placeholder="0" inputmode="numeric">
+      </div>
+      <div>
+        <div class="campaign-field-label">Value ($)</div>
+        <input type="number" min="0" step="0.01" class="panel-input" id="af-value" placeholder="0.00" inputmode="decimal">
+      </div>
+      <div class="full">
+        <div class="campaign-field-label">Notes</div>
+        <textarea class="panel-input" id="af-notes" style="min-height:80px;resize:vertical"></textarea>
+      </div>
+    </div>
+    <div class="popup-actions">
+      <button class="btn primary" id="att-popup-save">Save</button>
+      <button class="btn" id="att-popup-cancel">Cancel</button>
     </div>
   </div>
 </div>
@@ -1406,7 +1562,7 @@ const businessView     = document.getElementById('business-view');
 const campaignView     = document.getElementById('campaign-view');
 const campaignBody     = document.getElementById('campaign-body');
 const btnAddCampaignOrder    = document.getElementById('btn-add-campaign-order');
-const campaignPanel     = document.getElementById('campaign-panel');
+const campaignOverlay   = document.getElementById('campaign-overlay');
 const btnSaveCampaignOrder = document.getElementById('btn-save-campaign-order');
 const btnCancelCampaignOrder = document.getElementById('btn-cancel-campaign-order');
 const cfName = document.getElementById('cf-name');
@@ -1612,6 +1768,7 @@ function hideAddExpoPanel(){addExpoPanel.classList.remove('open');}
 async function selectExpo(id) {
   currentExpo = expos.find(e=>e.id===id)||null;
   calView.style.display='none';
+  anView.style.display='none';
   if (!currentExpo){noExpo.style.display='';expoView.style.display='none';return;}
   noExpo.style.display='none'; expoView.style.display='';
   expoTitle.textContent = currentExpo.name;
@@ -1755,10 +1912,13 @@ function openCampaignPanel(id) {
       cfNoteText.value = a.printed_note_text || '';
     }
   }
-  campaignPanel.classList.add('open');
+  document.getElementById('campaign-popup-title').textContent = campaignEditingId ? 'Edit order' : 'Add order';
+  campaignOverlay.classList.add('open');
   cfName.focus();
 }
-function closeCampaignPanel() { campaignPanel.classList.remove('open'); campaignEditingId = null; }
+function closeCampaignPanel() { campaignOverlay.classList.remove('open'); campaignEditingId = null; }
+document.getElementById('campaign-popup-close').addEventListener('click', closeCampaignPanel);
+campaignOverlay.addEventListener('mousedown', e => { if (e.target === campaignOverlay) closeCampaignPanel(); });
 document.querySelectorAll('.cf-collection').forEach(r => {
   r.addEventListener('change', () => { if (r.checked) cfDeliverySection.classList.toggle('open', r.value==='delivery'); });
 });
@@ -1828,6 +1988,7 @@ function rowHtml(a) {
     '<td><span class="cell-inner" data-field="next_action">'+esc(a.next_action)+'</span></td>' +
     '<td><span class="cell-inner" data-field="next_action_due">'+dueDateHtml(a.next_action_due)+'</span></td>' +
     '<td><span class="cell-inner" data-field="notes">'+esc(a.notes)+'</span></td>' +
+    '<td style="text-align:center;padding:0 4px"><button class="expand-btn edit-att-btn" title="Edit" style="color:#0071e3">&#9998;</button></td>' +
     '<td style="text-align:center;padding:0 4px">' +
       '<button class="chat-log-btn" title="Message logs">' +
         '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' +
@@ -1841,7 +2002,7 @@ function rowHtml(a) {
 
 function logRowHtml(id) {
   return '<tr class="log-row" data-for="'+esc(id)+'">' +
-    '<td colspan="15"><div class="log-panel" data-id="'+esc(id)+'">' +
+    '<td colspan="16"><div class="log-panel" data-id="'+esc(id)+'">' +
       '<div class="log-panel-inner">' +
         '<div class="fulfillment-section">' +
           '<div class="panel-section-title">Fulfillment</div>' +
@@ -1877,6 +2038,7 @@ function attachRowEvents(tr) {
   tr.querySelector('.del-btn').addEventListener('click', ()=>deleteAttendee(tr));
   tr.querySelector('.star-btn').addEventListener('click', ()=>toggleStar(tr,id));
   tr.querySelector('.chat-log-btn').addEventListener('click', ()=>openMessagePanel(id));
+  tr.querySelector('.edit-att-btn').addEventListener('click', ()=>openAttendeePopup(id));
 
   const cbNeeds = tr.querySelector('.cb-needs-message');
   const noteBox = tr.querySelector('.msg-note-box');
@@ -2020,17 +2182,62 @@ function revertCell(tr, cell, att) {
 }
 
 // ── Add / Delete ───────────────────────────────────────────────────────────────
-async function addAttendee() {
+const attOverlay = document.getElementById('att-overlay');
+const afName = document.getElementById('af-name'), afStatus = document.getElementById('af-status');
+const afQty = document.getElementById('af-qty'), afValue = document.getElementById('af-value'), afNotes = document.getElementById('af-notes');
+let attEditingId = null;
+STATUSES.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; afStatus.appendChild(o); });
+
+function openAttendeePopup(id) {
+  const a = id ? attendees.find(x => x.id === id) : null;
+  attEditingId = a ? a.id : null;
+  afName.value   = a ? (a.company || '') : '';
+  afStatus.value = a ? (a.status || 'New') : 'New';
+  afQty.value    = a && a.est_quantity != null ? a.est_quantity : '';
+  afValue.value  = a && a.est_value != null ? a.est_value : '';
+  afNotes.value  = a ? (a.notes || '') : '';
+  document.getElementById('att-popup-title').textContent = a ? 'Edit attendee' : 'Add attendee';
+  attOverlay.classList.add('open');
+  afName.focus();
+}
+function closeAttendeePopup() { attOverlay.classList.remove('open'); attEditingId = null; }
+
+async function saveAttendeePopup() {
   if (!currentExpo) return;
-  const {data,error}=await sb.from('attendees').insert({expo_id:currentExpo.id,status:'New',starred:false}).select().single();
-  if(error){console.error(error);return;}
-  attendees.push(data);
-  leadsBody.insertAdjacentHTML('beforeend',rowHtml(data));
-  leadsBody.insertAdjacentHTML('beforeend',logRowHtml(data.id));
-  const tr=leadsBody.querySelector('tr.data-row[data-id="'+data.id+'"]');
-  attachRowEvents(tr);
-  const fc=tr.querySelector('[data-field="company"]');if(fc)fc.click();
-  showToast('Row added');
+  const name = afName.value.trim();
+  if (!name) { afName.focus(); return; }
+  const payload = {
+    company: name,
+    status: afStatus.value || 'New',
+    est_quantity: afQty.value === '' ? null : parseInt(afQty.value, 10),
+    est_value: afValue.value === '' ? null : parseFloat(afValue.value),
+    notes: afNotes.value.trim() || null,
+  };
+  if (attEditingId) {
+    const {data,error} = await sb.from('attendees').update(payload).eq('id', attEditingId).select().single();
+    if (error) { console.error(error); showToast('Error saving'); return; }
+    const idx = attendees.findIndex(a => a.id === attEditingId);
+    if (idx >= 0) attendees[idx] = data;
+    showToast('Attendee updated');
+  } else {
+    const {data,error} = await sb.from('attendees').insert({...payload, expo_id: currentExpo.id, starred: false}).select().single();
+    if (error) { console.error(error); showToast('Error saving'); return; }
+    attendees.push(data);
+    showToast('Attendee added');
+  }
+  closeAttendeePopup();
+  renderTable();
+  updateStats();
+}
+document.getElementById('att-popup-save').addEventListener('click', saveAttendeePopup);
+document.getElementById('att-popup-cancel').addEventListener('click', closeAttendeePopup);
+document.getElementById('att-popup-close').addEventListener('click', closeAttendeePopup);
+attOverlay.addEventListener('mousedown', e => { if (e.target === attOverlay) closeAttendeePopup(); });
+afName.addEventListener('keydown', e => { if (e.key === 'Enter') saveAttendeePopup(); });
+
+function addAttendee() {
+  if (!currentExpo) return;
+  openAttendeePopup(null);
 }
 async function deleteAttendee(tr) {
   const id=tr.dataset.id, att=attendees.find(a=>a.id===id);
@@ -2414,9 +2621,65 @@ const calLegendEl     = document.getElementById('cal-legend');
 const calAssignOverlay= document.getElementById('cal-assign-overlay');
 const btnCalendar     = document.getElementById('btn-calendar');
 
+// Colour follows creation order, not the date-sorted list, so adding or moving
+// an event never repaints the others.
 function getExpoColor(expoId) {
-  const idx = expos.findIndex(e => e.id === expoId);
+  const ex = expos.find(e => e.id === expoId);
+  if (ex && ex.color) return ex.color;
+  const byCreated = [...expos].sort((a,b) =>
+    String(a.created_at||'').localeCompare(String(b.created_at||'')) || String(a.id).localeCompare(String(b.id)));
+  const idx = byCreated.findIndex(e => e.id === expoId);
   return idx >= 0 ? CAL_COLORS[idx % CAL_COLORS.length] : '#6e6e73';
+}
+
+const CAL_MONTHS_SHOWN = 8;
+const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+let calStart = null;          // { year, month } of the first month on screen
+let allAttendees = [];        // money/qty fields for every event, used by calendar totals and analytics
+
+function monthKey(y, m) { return y + '-' + String(m + 1).padStart(2,'0'); }
+function addMonths(ym, n) {
+  const t = ym.year * 12 + ym.month + n;
+  return { year: Math.floor(t / 12), month: t % 12 };
+}
+function calWindow() {
+  const end = addMonths(calStart, CAL_MONTHS_SHOWN - 1);
+  const last = new Date(end.year, end.month + 1, 0).getDate();
+  return { from: monthKey(calStart.year, calStart.month) + '-01', to: monthKey(end.year, end.month) + '-' + String(last).padStart(2,'0'), end };
+}
+
+async function loadAllAttendees() {
+  const {data,error} = await sb.from('attendees').select('expo_id,status,est_value,est_quantity,amount_paid,shipping_paid,box6_qty,box12_qty');
+  if (error) { console.error(error); return; }
+  allAttendees = data || [];
+}
+
+const WON_STATUSES = ['Ordered and Paid','Completed'];
+const ACTIVE_STATUSES = ['New','In Contact','Waiting Reply','Ordered and Unpaid','Ordered and Paid','Completed'];
+
+// Totals per month (keyed 'YYYY-MM'), using the month each event starts in.
+function monthlyTotals() {
+  const expoById = {};
+  expos.forEach(e => { if (e.date) expoById[e.id] = e; });
+  const out = {};
+  allAttendees.forEach(a => {
+    const ex = expoById[a.expo_id];
+    if (!ex) return;
+    const key = ex.date.slice(0, 7);
+    const t = out[key] || (out[key] = { won: 0, open: 0, bizCookies: 0, boxCookies: 0, box6: 0, box12: 0 });
+    if (ex.mode === 'campaign') {
+      t.won += (a.amount_paid || 0) + (a.shipping_paid || 0);
+      t.box6 += a.box6_qty || 0;
+      t.box12 += a.box12_qty || 0;
+      t.boxCookies += (a.box6_qty || 0) * 6 + (a.box12_qty || 0) * 12;
+    } else if (WON_STATUSES.includes(a.status)) {
+      t.won += a.est_value || 0;
+      t.bizCookies += a.est_quantity || 0;
+    } else if (ACTIVE_STATUSES.includes(a.status)) {
+      t.open += a.est_value || 0;
+    }
+  });
+  return out;
 }
 function getExpoForDay(dateStr) {
   return expos.find(e => {
@@ -2425,12 +2688,17 @@ function getExpoForDay(dateStr) {
   });
 }
 
-function renderMonth(year, month) {
+function renderMonth(year, month, totals) {
   const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDow    = (new Date(year, month, 1).getDay() + 6) % 7;
   const todayStr    = today();
-  let html = '<div class="cal-month"><div class="cal-month-title">' + MONTH_NAMES[month] + ' ' + year + '</div><div class="cal-grid">';
+  const t = totals[monthKey(year, month)];
+  const money = t && (t.won || t.open)
+    ? '<strong>' + fmtCompactMoney(t.won) + '</strong> won &middot; <span class="pipe">' + fmtCompactMoney(t.open) + '</span> open'
+    : '<span style="color:#c7c7cc">$0</span>';
+  let html = '<div class="cal-month"><div class="cal-month-title">' + MONTH_NAMES[month] + ' ' + year + '</div>' +
+    '<div class="cal-month-money">' + money + '</div><div class="cal-grid">';
   ['M','T','W','T','F','S','S'].forEach(d => { html += '<div class="cal-dow">' + d + '</div>'; });
   for (let i = 0; i < firstDow; i++) html += '<div class="cal-day empty"></div>';
   for (let d = 1; d <= daysInMonth; d++) {
@@ -2447,29 +2715,30 @@ function renderMonth(year, month) {
 }
 
 function renderCalendar() {
-  const nowParts = nzDateParts();
-  let y = nowParts.year, m = nowParts.month;
+  if (!calStart) { const n = nzDateParts(); calStart = { year: n.year, month: n.month }; }
+  const win = calWindow();
+  const totals = monthlyTotals();
   let html = '';
-  while (y < 2026 || (y === 2026 && m <= 11)) {
-    html += renderMonth(y, m);
-    m++; if (m > 11) { m = 0; y++; }
+  for (let i = 0; i < CAL_MONTHS_SHOWN; i++) {
+    const ym = addMonths(calStart, i);
+    html += renderMonth(ym.year, ym.month, totals);
   }
   calBodyEl.innerHTML = html;
+  document.getElementById('cal-range').textContent =
+    MONTH_SHORT[calStart.month] + ' ' + calStart.year + ' – ' + MONTH_SHORT[win.end.month] + ' ' + win.end.year;
 
+  // Only list events that show up in the months on screen, and none that have already finished
   const todayStr = today();
-  const withDates = expos.filter(e => e.date).sort((a,b) => {
-    const aUpcoming = (a.date_end || a.date) >= todayStr;
-    const bUpcoming = (b.date_end || b.date) >= todayStr;
-    if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
-    return aUpcoming ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date);
-  });
+  const withDates = expos.filter(e => e.date && e.date <= win.to && (e.date_end || e.date) >= win.from)
+    .filter(e => win.to < todayStr || (e.date_end || e.date) >= todayStr)
+    .sort((a,b) => a.date.localeCompare(b.date));
   calLegendEl.innerHTML = withDates.length
     ? withDates.map(e =>
         '<div class="cal-legend-item">' +
           '<div class="cal-legend-dot" style="background:' + getExpoColor(e.id) + '"></div>' +
           esc(e.name) + (e.date ? ' <span style="color:#aeaeb2;font-weight:400">(' + fmtDate(e.date) + (e.date_end && e.date_end !== e.date ? ' – ' + fmtDate(e.date_end) : '') + ')</span>' : '') +
         '</div>').join('')
-    : '<span style="font-size:12px;color:#aeaeb2">No events with dates yet — drag on the calendar to assign one</span>';
+    : '<span style="font-size:12px;color:#aeaeb2">No upcoming events in these months. Drag on the calendar to add one.</span>';
 
   initCalInteraction();
 }
@@ -2622,13 +2891,109 @@ async function loadCalStats() {
 }
 
 async function openCal() {
-  await loadExpos();
+  await Promise.all([loadExpos(), loadAllAttendees()]);
   noExpo.style.display   = 'none';
   expoView.style.display = 'none';
+  anView.style.display   = 'none';
   calView.style.display  = '';
   await loadCalStats();
   renderCalendar();
 }
+document.getElementById('cal-prev').addEventListener('click', () => { calStart = addMonths(calStart, -4); renderCalendar(); });
+document.getElementById('cal-next').addEventListener('click', () => { calStart = addMonths(calStart, 4); renderCalendar(); });
+document.getElementById('cal-today').addEventListener('click', () => { calStart = null; renderCalendar(); });
+
+// ── Analytics ──────────────────────────────────────────────────────────────────
+const anView = document.getElementById('an-view');
+const anTip  = document.getElementById('an-tip');
+let anYear = nzDateParts().year;
+
+async function openAnalytics() {
+  await Promise.all([loadExpos(), loadAllAttendees()]);
+  noExpo.style.display   = 'none';
+  expoView.style.display = 'none';
+  calView.style.display  = 'none';
+  anView.style.display   = '';
+  renderAnalytics();
+}
+function closeAnalytics() {
+  anView.style.display = 'none';
+  if (currentExpo) expoView.style.display = '';
+  else noExpo.style.display = '';
+}
+
+// Stacked bar chart: series = [{key, label, color}], rows = 12 month objects
+function renderStackedChart(chartEl, labelsEl, rows, series, fmt) {
+  const totals = rows.map(r => series.reduce((s, x) => s + r[x.key], 0));
+  const max = Math.max(...totals, 0);
+  const nowKey = (() => { const n = nzDateParts(); return monthKey(n.year, n.month); })();
+  chartEl.innerHTML = rows.map((r, i) => {
+    let first = true;
+    const segs = [...series].reverse().map(x => {
+      const h = max ? (r[x.key] / max) * 100 : 0;
+      if (h <= 0) return '';
+      const cls = first ? 'an-seg top' : 'an-seg';
+      first = false;
+      return '<div class="' + cls + '" style="height:' + h + '%;background:' + x.color + '"></div>';
+    }).join('');
+    const top = max ? (totals[i] / max) * 100 : 0;
+    const label = totals[i] ? '<div class="an-total" style="bottom:calc(' + top + '% + 3px)">' + fmt(totals[i], true) + '</div>' : '';
+    return '<div class="an-col" data-i="' + i + '">' + label + segs + '</div>';
+  }).join('');
+  labelsEl.innerHTML = rows.map(r => '<div class="' + (r.key === nowKey ? 'now' : '') + '">' + MONTH_SHORT[r.month] + '</div>').join('');
+  chartEl.querySelectorAll('.an-col').forEach(col => {
+    const r = rows[+col.dataset.i];
+    col.addEventListener('mousemove', e => {
+      anTip.innerHTML = '<strong>' + MONTH_SHORT[r.month] + ' ' + r.year + '</strong><br>' +
+        series.map(x => '<span style="display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;background:' + x.color + '"></span>' + x.label + ': ' + fmt(r[x.key])).join('<br>');
+      anTip.style.display = 'block';
+      const w = anTip.offsetWidth;
+      anTip.style.left = Math.min(e.clientX + 14, window.innerWidth - w - 8) + 'px';
+      anTip.style.top  = (e.clientY + 14) + 'px';
+    });
+    col.addEventListener('mouseleave', () => { anTip.style.display = 'none'; });
+  });
+}
+
+function fmtCompactMoney(v, short) {
+  if (short && v >= 1000) return '$' + (v / 1000).toFixed(v >= 10000 ? 0 : 1) + 'k';
+  return '$' + Math.round(v || 0).toLocaleString('en-NZ');
+}
+function fmtCount(v) { return Number(v || 0).toLocaleString('en-NZ'); }
+
+function renderAnalytics() {
+  document.getElementById('an-year').textContent = anYear;
+  const totals = monthlyTotals();
+  const rows = [];
+  for (let m = 0; m < 12; m++) {
+    const key = monthKey(anYear, m);
+    const t = totals[key] || { won: 0, open: 0, bizCookies: 0, boxCookies: 0, box6: 0, box12: 0 };
+    rows.push({ key, year: anYear, month: m, ...t });
+  }
+  renderStackedChart(document.getElementById('an-money-chart'), document.getElementById('an-money-labels'), rows,
+    [{ key: 'won', label: 'Won', color: '#1a7f37' }, { key: 'open', label: 'Still open', color: '#0071e3' }], fmtCompactMoney);
+  renderStackedChart(document.getElementById('an-cookie-chart'), document.getElementById('an-cookie-labels'), rows,
+    [{ key: 'bizCookies', label: 'Business cookies', color: '#0071e3' }, { key: 'boxCookies', label: 'Campaign box cookies', color: '#e67e22' }], fmtCount);
+
+  const sum = k => rows.reduce((s, r) => s + r[k], 0);
+  const best = rows.reduce((b, r) => (r.won > (b ? b.won : 0) ? r : b), null);
+  document.getElementById('an-stat-won').textContent     = fmtCompactMoney(sum('won'));
+  document.getElementById('an-stat-open').textContent    = fmtCompactMoney(sum('open'));
+  document.getElementById('an-stat-best').textContent    = best ? MONTH_SHORT[best.month] + ' · ' + fmtCompactMoney(best.won, true) : '-';
+  document.getElementById('an-stat-cookies').textContent = fmtCount(sum('bizCookies') + sum('boxCookies'));
+
+  document.getElementById('an-table').innerHTML =
+    '<thead><tr><th>Month</th><th>Won</th><th>Still open</th><th>Business cookies</th><th>6-packs</th><th>12-packs</th><th>Total cookies</th></tr></thead><tbody>' +
+    rows.map(r => '<tr><td>' + MONTH_SHORT[r.month] + ' ' + r.year + '</td><td>' + fmtCompactMoney(r.won) + '</td><td>' + fmtCompactMoney(r.open) +
+      '</td><td>' + fmtCount(r.bizCookies) + '</td><td>' + fmtCount(r.box6) + '</td><td>' + fmtCount(r.box12) + '</td><td>' + fmtCount(r.bizCookies + r.boxCookies) + '</td></tr>').join('') +
+    '</tbody><tfoot><tr><td>Total</td><td>' + fmtCompactMoney(sum('won')) + '</td><td>' + fmtCompactMoney(sum('open')) + '</td><td>' + fmtCount(sum('bizCookies')) +
+    '</td><td>' + fmtCount(sum('box6')) + '</td><td>' + fmtCount(sum('box12')) + '</td><td>' + fmtCount(sum('bizCookies') + sum('boxCookies')) + '</td></tr></tfoot>';
+}
+
+document.getElementById('btn-analytics').addEventListener('click', openAnalytics);
+document.getElementById('an-close').addEventListener('click', closeAnalytics);
+document.getElementById('an-prev').addEventListener('click', () => { anYear--; renderAnalytics(); });
+document.getElementById('an-next').addEventListener('click', () => { anYear++; renderAnalytics(); });
 function closeCal() {
   calView.style.display = 'none';
   if (currentExpo) expoView.style.display = '';
@@ -2676,7 +3041,10 @@ document.getElementById('cal-assign-cancel').addEventListener('click', () => {
 
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
-  if (calAssignOverlay.classList.contains('open')) calAssignOverlay.classList.remove('open');
+  if (attOverlay.classList.contains('open')) closeAttendeePopup();
+  else if (campaignOverlay.classList.contains('open')) closeCampaignPanel();
+  else if (calAssignOverlay.classList.contains('open')) calAssignOverlay.classList.remove('open');
+  else if (anView.style.display !== 'none') closeAnalytics();
   else if (calView.style.display !== 'none') closeCal();
 });
 
