@@ -2613,7 +2613,6 @@ document.getElementById('import-add-btn').addEventListener('click', async () => 
 });
 
 // ── Calendar ───────────────────────────────────────────────────────────────────
-const CAL_COLORS = ['#0071e3','#34c759','#e67e22','#5856d6','#ff2d55','#af52de','#17a589','#c0392b','#2980b9','#f39c12'];
 
 const calView         = document.getElementById('cal-view');
 const calBodyEl       = document.getElementById('cal-body');
@@ -2621,16 +2620,36 @@ const calLegendEl     = document.getElementById('cal-legend');
 const calAssignOverlay= document.getElementById('cal-assign-overlay');
 const btnCalendar     = document.getElementById('btn-calendar');
 
-// Colour follows creation order, not the date-sorted list, so adding or moving
-// an event never repaints the others.
-function getExpoColor(expoId) {
-  const ex = expos.find(e => e.id === expoId);
-  if (ex && ex.color) return ex.color;
-  const byCreated = [...expos].sort((a,b) =>
-    String(a.created_at||'').localeCompare(String(b.created_at||'')) || String(a.id).localeCompare(String(b.id)));
-  const idx = byCreated.findIndex(e => e.id === expoId);
-  return idx >= 0 ? CAL_COLORS[idx % CAL_COLORS.length] : '#6e6e73';
+// Events are shaded by how much the order is worth: light blue for small orders
+// (a 24-cookie box is ~$110), dark blue for big ones. The dollar steps are fixed,
+// so an event's shade only changes when its own value changes.
+const WORTH_SHADES = [
+  { max: 0,        bg: '#e3eefc', fg: '#0b3a75' },  // nothing priced yet
+  { max: 150,      bg: '#c6dcf9', fg: '#0b3a75' },
+  { max: 300,      bg: '#9cc3f3', fg: '#0b3a75' },
+  { max: 500,      bg: '#6aa3ea', fg: '#06244d' },
+  { max: 800,      bg: '#3a80dc', fg: '#ffffff' },
+  { max: 1200,     bg: '#1c5fbf', fg: '#ffffff' },
+  { max: Infinity, bg: '#0b3a80', fg: '#ffffff' },
+];
+let expoWorth = {};           // expo id -> order value, rebuilt on each calendar render
+function buildExpoWorth() {
+  const modeById = {};
+  expos.forEach(e => { modeById[e.id] = e.mode; });
+  expoWorth = {};
+  allAttendees.forEach(a => {
+    if (!(a.expo_id in modeById)) return;
+    const v = modeById[a.expo_id] === 'campaign'
+      ? (a.amount_paid || 0) + (a.shipping_paid || 0)
+      : (ACTIVE_STATUSES.includes(a.status) ? (a.est_value || 0) : 0);
+    expoWorth[a.expo_id] = (expoWorth[a.expo_id] || 0) + Number(v);
+  });
 }
+function getExpoShade(expoId) {
+  const worth = expoWorth[expoId] || 0;
+  return WORTH_SHADES.find(s => worth <= s.max);
+}
+function getExpoColor(expoId) { return getExpoShade(expoId).bg; }
 
 const CAL_MONTHS_SHOWN = 8;
 const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -2705,7 +2724,7 @@ function renderMonth(year, month, totals) {
     const dateStr = year + '-' + String(month + 1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
     const expo = getExpoForDay(dateStr);
     let cls = 'cal-day', sty = '';
-    if (expo) { cls += ' has-event'; sty = 'background:' + getExpoColor(expo.id) + ';'; }
+    if (expo) { const sh = getExpoShade(expo.id); cls += ' has-event'; sty = 'background:' + sh.bg + ';color:' + sh.fg + ';'; }
     if (dateStr === todayStr) cls += ' today';
     const tip = expo ? ' title="' + esc(expo.name + (expo.location ? ' — ' + expo.location : '')) + '"' : '';
     html += '<div class="' + cls + '" style="' + sty + '" data-date="' + dateStr + '" data-expo-id="' + (expo ? esc(expo.id) : '') + '"' + tip + '>' + d + '</div>';
@@ -2715,9 +2734,11 @@ function renderMonth(year, month, totals) {
 }
 
 function renderCalendar() {
-  if (!calStart) { const n = nzDateParts(); calStart = { year: n.year, month: n.month }; }
+  // Default view starts one month back, so last month sits on the left of the first row
+  if (!calStart) { const n = nzDateParts(); calStart = addMonths({ year: n.year, month: n.month }, -1); }
   const win = calWindow();
   const totals = monthlyTotals();
+  buildExpoWorth();
   let html = '';
   for (let i = 0; i < CAL_MONTHS_SHOWN; i++) {
     const ym = addMonths(calStart, i);
@@ -2735,9 +2756,13 @@ function renderCalendar() {
   calLegendEl.innerHTML = withDates.length
     ? withDates.map(e =>
         '<div class="cal-legend-item">' +
-          '<div class="cal-legend-dot" style="background:' + getExpoColor(e.id) + '"></div>' +
-          esc(e.name) + (e.date ? ' <span style="color:#aeaeb2;font-weight:400">(' + fmtDate(e.date) + (e.date_end && e.date_end !== e.date ? ' – ' + fmtDate(e.date_end) : '') + ')</span>' : '') +
-        '</div>').join('')
+          '<div class="cal-legend-dot" style="background:' + getExpoColor(e.id) + ';box-shadow:inset 0 0 0 1px rgba(11,58,128,0.25)"></div>' +
+          esc(e.name) + ' <span style="color:#6e6e73;font-weight:600">' + fmtCompactMoney(expoWorth[e.id] || 0) + '</span>' +
+          (e.date ? ' <span style="color:#aeaeb2;font-weight:400">(' + fmtDate(e.date) + (e.date_end && e.date_end !== e.date ? ' – ' + fmtDate(e.date_end) : '') + ')</span>' : '') +
+        '</div>').join('') +
+      '<div class="cal-legend-item" style="margin-left:auto;color:#6e6e73;font-weight:400">Smaller order' +
+        WORTH_SHADES.slice(1).map(s => '<div class="cal-legend-dot" style="border-radius:3px;background:' + s.bg + '"></div>').join('') +
+        'Bigger order</div>'
     : '<span style="font-size:12px;color:#aeaeb2">No upcoming events in these months. Drag on the calendar to add one.</span>';
 
   initCalInteraction();
